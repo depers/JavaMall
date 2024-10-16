@@ -17,7 +17,7 @@ public class MyAccessDeniedHandler implements AccessDeniedHandler {
 
 
     /**
-     * 当访问接口没有权限时返回
+     * 这块逻辑在AccessDeniedException异常时，程序抛出当访问接口没有权限时返回
      */
 
     @Override

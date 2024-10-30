@@ -24,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @Slf4j
 public class ReplayProtectAspect {
+
+
     private static final Map<Class<?>, Map<String, Object>> CACHE_MAP = new ConcurrentHashMap<>();
 
     @Pointcut("execution(* cn.bravedawn.controller.*.*(..))")

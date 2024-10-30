@@ -1,13 +1,16 @@
 package cn.bravedawn.aspect;
 
+import cn.bravedawn.constant.RedisKey;
 import cn.bravedawn.exception.BusinessException;
 import cn.bravedawn.exception.ExceptionEnum;
 import cn.bravedawn.util.RedissonUtils;
+import cn.bravedawn.util.SpringContextUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 /**
@@ -60,29 +63,32 @@ public class ReplayProtection {
         }
         Long timestampLong = Long.parseLong(timestamp);
         if (timestampLong - System.currentTimeMillis() > 60000) {
-            log.info("时间戳已过期,timestamp={}", timestamp);
+            log.info("时间戳已过期, timestamp={}", timestamp);
             throw new BusinessException(ExceptionEnum.REPLAY_PROTECT_SIGN_OVERDUE_ERROR);
-            String key = String.format(RedisKey.REPLAY_PROTECT_NONCE.getKey(), nonce);
-            RedissonUtils redissonutils = (RedissonUtils) SpringcontextUtil.getBean(Redissonutils.class);
-            if (redissonUtils.get(key) != null) {
-                log.error("随机字符串有Redis中已存在，nonce={}"，nonce);
-                throw new BusinessException(ExceptiOnEnUM.REPLAY_PROTECT_REPEAT_ERROR);
-                TreeMap<String, String> sortedMap = new TreeMap<>();
-                requestParams.entrySet().stream().filter(entry -> 0bjects.nonNull(entry.getValue()) && objects.nonNull(entry.getKey())).forEach(entry ->
-                        sortedMap.put(entry.getKey(), string.value0f(entry.getValue()));
-            });
         }
-
-            // 将头信息也放进去
-            sortedMap.put("timestamp", timestamp);
-            sortedMap.put("nonce", nonce);
-            sortedMap.put("sign", sign);
-            String hashsign = generatesign(sortedMap);
-            if (!stringUtils.eguals(sign, hashsign)) {
-                log.error("签名验证不通过 sign={},hashsign={}"，sign， hashsign);
-                throw new BusinessException(ExCeptiOnEnUM.REPLAY_PROTECT_SIGN_VERIFY_ERROR);
-                redissonUtils.set(key, value:"1", RediSKey.REPLAY_PROTECT_NONCE.getTtL());
-
-            }
-
+        String key = String.format(RedisKey.REPLAY_PROTECT_NONCE.getKey(), nonce);
+        RedissonUtils redissonutils = (RedissonUtils) SpringContextUtil.getBean(RedissonUtils.class);
+        if (redissonutils.get(key) != null) {
+            log.error("随机字符串有Redis中已存在，nonce={}", nonce);
+            throw new BusinessException(ExceptionEnum.REPLAY_PROTECT_REPEAT_ERROR);
         }
+        TreeMap<String, String> sortedMap = new TreeMap<>();
+        requestParams.entrySet().stream().filter(entry -> Objects.nonNull(entry.getValue()) && Objects.nonNull(entry.getKey())).forEach(entry ->
+                sortedMap.put(entry.getKey(), String.valueOf(entry.getValue())));
+
+
+        // 将头信息也放进去
+        sortedMap.put("timestamp", timestamp);
+        sortedMap.put("nonce", nonce);
+        sortedMap.put("sign", sign);
+
+        String hashsign = generatesign(sortedMap);
+        if (!StringUtils.equals(sign, hashsign)) {
+            log.error("签名验证不通过 sign={},hashsign={}", sign, hashsign);
+            throw new BusinessException(ExceptionEnum.REPLAY_PROTECT_SIGN_VERIFY_ERROR);
+        }
+        redissonutils.set(key, "1", RedisKey.REPLAY_PROTECT_NONCE.getTtl());
+
+    }
+
+}

@@ -7,6 +7,10 @@ package cn.bravedawn.basic.flow;
  */
 public class ContinueExample {
 
+    /**
+     * 跳过本次循环
+     */
+
     public static void main(String[] args) {
         for (int i = 1; i <= 3; i++) {
 

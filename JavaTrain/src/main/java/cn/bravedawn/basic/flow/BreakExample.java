@@ -7,6 +7,9 @@ package cn.bravedawn.basic.flow;
  */
 public class BreakExample {
 
+    /**
+     * break会跳出第一层循环
+     */
 
     public static void main(String[] args) {
 

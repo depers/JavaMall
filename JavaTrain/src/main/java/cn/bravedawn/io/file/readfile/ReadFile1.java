@@ -26,13 +26,15 @@ public class ReadFile1 {
         String fileName = ResourceHelper.getAbsoluteFilePath("doc/test.txt");
 
         // auto-close the resources
-        Stream<String> lines = Files.lines(Paths.get(fileName));
+        try (Stream<String> lines = Files.lines(Paths.get(fileName))) {
+            // does not preserve order
+            lines.forEach(System.out::println);
 
-        // does not preserve order
-        lines.forEach(System.out::println);
+            // preserve order
+            // lines.forEachOrdered(System.out::println);
+        }
 
-        // preserve order
-        // lines.forEachOrdered(System.out::println);
+
     }
 
 }

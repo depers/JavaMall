@@ -13,9 +13,13 @@ public class FindFirstExample {
 
     public static void main(String[] args) {
         List<String> strings = Arrays.asList("1", "2", "3");
-        Optional<String> first = strings.stream().findFirst();
+        Stream<String> stream = strings.stream();
+        Optional<String> first = stream.findFirst();
         if (first.isPresent()) {
             System.out.println(first.get());
         }
+
+        // 查看流中是否还存在该元素
+        // stream.forEachOrdered(System.out::println); // 这里会报错，因为之前的流已经被关闭了
     }
 }

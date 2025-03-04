@@ -24,7 +24,7 @@ public class PacketCodecHandler extends MessageToMessageCodec<ByteBuf, Packet> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Packet packet, List<Object> out) throws Exception {
-        ByteBuf byteBuf = ctx.channel().alloc().ioBuffer();
+        ByteBuf byteBuf = ctx.alloc().buffer();
         PacketCodec.INSTANCE.encode(byteBuf, packet);
         out.add(byteBuf);
     }

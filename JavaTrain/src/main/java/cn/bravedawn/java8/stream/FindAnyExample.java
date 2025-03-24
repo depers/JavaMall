@@ -21,7 +21,7 @@ public class FindAnyExample {
          * findAny和findFirst的区别，他两都是查找一个元素，不同的是前者会随机取一个，而后者会取第一个
          */
         List<Integer> list = Lists.newArrayList(1, 2, 3, 4, 5, 2);
-        Integer result = list.stream().filter(i -> i.equals(2)).findAny().orElse(null);
+        Integer result = list.stream().filter(i -> i.equals(7)).findAny().orElse(0);
         System.out.println(result);
     }
 

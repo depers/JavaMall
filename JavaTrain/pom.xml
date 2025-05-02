@@ -10,7 +10,7 @@
 
     <properties>
         <spring.version>5.0.9.RELEASE</spring.version>
-        <h2.version>1.4.199</h2.version>
+        <h2.version>2.2.220</h2.version>
         <source.version>17</source.version>
         <target.version>17</target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -348,12 +348,14 @@ public class InsertController {
         TransactionManager transactionManager = new TransactionManager();
         try {
             insert(userList);
-
+            log.info("开始睡眠");
+            Thread.sleep(20000);
             userMapper.insertSelective(user);
             transactionManager.commit();
             log.info("插入数据耗时：{}ms", System.currentTimeMillis() - startTime);
             return "success";
         }catch(Throwable e) {
+            log.error("出现异常", e);
             transactionManager.rollback();
         }
         return "success";
@@ -367,6 +369,7 @@ public class InsertController {
                 mapper.insertSelective(item);
             }
 
+            // 这里会将事务托管给spring统一处理
             sqlSession.commit();
         }
     }

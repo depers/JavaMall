@@ -37,7 +37,7 @@
          clsName = clsName.replace(".", "/");
 
          try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-             in = new FileInputStream(new File("classes/" + clsName + ".class"));
+             in = new FileInputStream(new File("class/" + clsName + ".class"));
              int a = 0;
              while ((a = in.read()) != -1) {
                  out.write(a);

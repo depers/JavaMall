@@ -32,9 +32,9 @@ public class ProducerClient {
 
         Producer<byte[]> producer = pulsarClient.newProducer().topic("my-topic").create();
         CompletableFuture<MessageId> messageIdCompletableFuture = producer.sendAsync("你好，我是生产者".getBytes(StandardCharsets.UTF_8));
-        messageIdCompletableFuture.thenApply(msgId -> {
-
-        })
+//        messageIdCompletableFuture.thenApply(msgId -> {
+//
+//        })
         return true;
     }
 }

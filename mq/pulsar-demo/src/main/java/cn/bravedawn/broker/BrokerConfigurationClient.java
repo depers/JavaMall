@@ -13,7 +13,7 @@ import java.util.Map;
  * @Project : pulsar-demo
  * @Date : Created in 2025-07-12 10:13
  */
-public class ConfigurationClient {
+public class BrokerConfigurationClient {
 
 
     public static void main(String[] args) throws PulsarClientException, PulsarAdminException {

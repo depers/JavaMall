@@ -21,6 +21,8 @@ public class NamespaceConfigurationClient{
                 .serviceHttpUrl("http://192.168.133.128:8080")
                 .build();
 
+        admin.namespaces().createNamespace("public/siis");
+
         Boolean deduplicationStatus = admin.namespaces().getDeduplicationStatus("public/siis");
         log.info("获取命名空间的重复删除数据配置：{}", deduplicationStatus);
 

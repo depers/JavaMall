@@ -18,6 +18,11 @@ public class CreateTopic {
         PulsarAdmin admin = PulsarAdmin.builder()
                 .serviceHttpUrl("http://192.168.133.128:8080")
                 .build();
-        admin.topics().createPartitionedTopic(topicName, 3);
+//        admin.topics().createPartitionedTopic(topicName, 3);
+
+        admin.topics().delete("persistent://public/default/partitionedTopic-deadLetter");
+        admin.topics().delete("persistent://public/default/partitionedTopic-retryLetter");
+
+        admin.close();
     }
 }

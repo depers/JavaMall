@@ -13,11 +13,11 @@ import java.util.concurrent.TimeUnit;
  * @Description : TODO
  * @Author : depers
  * @Project : pulsar-demo
- * @Date : Created in 2025-07-15 14:21
+ * @Date : Created in 2025-07-21 11:37
  */
 
 @Slf4j
-public class DeduplicationProducerClient {
+public class DelayedProducerClient {
 
     public static void main(String[] args) throws PulsarClientException, ExecutionException, InterruptedException {
         // 定义客户端
@@ -33,15 +33,11 @@ public class DeduplicationProducerClient {
         // 定义生产者
         Producer<DemoData> producer = pulsarClient
                 .newProducer(jsonSchema)
-                .producerName("producer-2")
-//                .initialSequenceId(0)
                 // 访问模式
                 .accessMode(ProducerAccessMode.Shared)
                 // 路由模式
                 .messageRoutingMode(MessageRoutingMode.RoundRobinPartition)
                 .topic("persistent://public/siis/partitionedTopic")
-                // 设置消息超时时间无穷大
-                .sendTimeout(0, TimeUnit.SECONDS)
                 .create();
 
         Snowflake snowflake = new Snowflake();
@@ -50,21 +46,18 @@ public class DeduplicationProducerClient {
         data.setName("test");
 
         // 发送消息
-        for (int i = 0; i < 10; i++) {
-            producer.newMessage()
+        try {
+            MessageId sendResult = producer.newMessage()
                     .value(data)
-                    .key(String.valueOf(i))
-                    .sequenceId(1L)
-                    .sendAsync()
-                    .thenApply(messageId -> {
-                        log.info("消息发送成功，{}, data={}", messageId, data);
-                        return messageId;
-                    }).exceptionally(e -> {
-                        log.error("消息发送失败", e);
-                        return null;
-                    }).get();
+                    // 设置Key
+                    .key("userId")
+                    .deliverAfter(10, TimeUnit.SECONDS)
+                    .sequenceId(snowflake.nextId())
+                    .send();
+        } catch (Throwable e) {
+            log.error("消息发送失败", e);
         }
-
+        log.info("消息发送成功， msg={}", data);
 
         // 关闭客户端和生产者
         producer.close();

@@ -1,0 +1,15 @@
+pulsar-config:
+  service-url: pulsar://192.168.133.128:6650
+  io-threads: 1
+  listener-threads: 1
+  send-timeout: 1
+  send-max-retry-count: 3
+
+topics:
+  - topic-prefix: sms
+    topic-name: persistent://public/siis/sms
+    retry-letter-topic-name: persistent://public/siis/retry_sms
+    dead-letter-topic-name: persistent://public/siis/dead_sms
+    listen-config:
+      max-retry-count: 3
+      work-thread-num: 3

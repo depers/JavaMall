@@ -4,6 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.common.policies.data.BacklogQuota;
+import org.apache.pulsar.common.policies.data.RetentionPolicies;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @Description : TODO
@@ -21,11 +26,41 @@ public class NamespaceConfigurationClient{
                 .serviceHttpUrl("http://192.168.133.128:8080")
                 .build();
 
-        admin.namespaces().createNamespace("public/siis");
+        try {
+            List<String> namespaces = admin.namespaces().getNamespaces("public");
+            if (namespaces.contains("public/siis")) {
+                log.warn("该命名空间已存在，namespace={}", "public/siis");
+            } else {
+                log.info("创建命名空间, namespace={}", "public/siis");
+                admin.namespaces().createNamespace("public/siis");
+            }
 
-        Boolean deduplicationStatus = admin.namespaces().getDeduplicationStatus("public/siis");
-        log.info("获取命名空间的重复删除数据配置：{}", deduplicationStatus);
+            Boolean deduplicationStatus = admin.namespaces().getDeduplicationStatus("public/siis");
+            if (deduplicationStatus == null) {
+                log.info("开启命名空间的重复数据删除配置");
+                admin.namespaces().setDeduplicationStatus("public/siis", true);
+            } else {
+                log.info("获取命名空间的重复删除数据配置：{}", deduplicationStatus);
+            }
 
-        admin.close();
+            RetentionPolicies retention = admin.namespaces().getRetention("public/siis");
+            log.info("该命名空间下每个主题的保留策略：{}", retention);
+
+            Map<BacklogQuota.BacklogQuotaType, BacklogQuota> backlogQuotaMap = admin.namespaces().getBacklogQuotaMap("public/siis");
+            log.info("该命名空间下的积压配额：{}", backlogQuotaMap);
+
+            Integer namespaceMessageTTL = admin.namespaces().getNamespaceMessageTTL("public/siis");
+            log.info("消息的有效时间：{}", namespaceMessageTTL);
+
+
+        } catch (Throwable e) {
+            log.info("命名空间操作出现异常", e);
+        } finally {
+            admin.close();
+        }
+
+
+
+
     }
 }

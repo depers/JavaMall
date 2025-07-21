@@ -48,6 +48,12 @@ public class BrokerConfigurationClient {
         String acknowledgmentAtBatchIndexLevelEnabled = admin.brokers().getRuntimeConfigurations().get("acknowledgmentAtBatchIndexLevelEnabled");
         log.info("acknowledgmentAtBatchIndexLevelEnabled: {}", acknowledgmentAtBatchIndexLevelEnabled);
 
+        /**
+         * 是否开启延迟投递
+         */
+
+        String delayedDeliveryEnabled = admin.brokers().getRuntimeConfigurations().get("delayedDeliveryEnabled");
+        log.info("delayedDeliveryEnabled: {}", delayedDeliveryEnabled);
         admin.close();
     }
 }

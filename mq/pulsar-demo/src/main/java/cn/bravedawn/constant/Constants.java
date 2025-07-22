@@ -10,4 +10,6 @@ public interface Constants {
 
 
     String TOPIC_NAME = "persistent://public/siis/partitionedTopic";
+
+    String NAMESPACE_NAME = "public/siis";
 }

@@ -3,10 +3,10 @@ spring:
         # 允许循环依赖
         allow-circular-references: true
     rabbitmq:
-        host: localhost
+        host: 192.168.133.128
         port: 5672
-        username: guest
-        password: guest
+        username: admin
+        password: admin
         virtual-host: /
         # 确保消息成功发送到交换器
         publisher-confirm-type: correlated

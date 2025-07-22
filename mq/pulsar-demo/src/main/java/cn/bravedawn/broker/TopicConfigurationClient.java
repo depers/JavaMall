@@ -5,7 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.common.policies.data.TopicStats;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,10 +28,19 @@ public class TopicConfigurationClient {
         log.info("topic的配置： {}", properties);
 
         // 因为pulsar默认关闭了topic的策略配置，这里会报错
-        Boolean deduplicationStatus = admin.topics().getDeduplicationStatus(Constants.TOPIC_NAME);
-        log.info("topic的删除重复消息配置：{}", deduplicationStatus);
+//        Boolean deduplicationStatus = admin.topics().getDeduplicationStatus(Constants.TOPIC_NAME);
+//        log.info("topic的删除重复消息配置：{}", deduplicationStatus);
 
 
+        List<String> topicList = admin.topics().getList(Constants.NAMESPACE_NAME);
+        log.info("获取该命名空间下的所有topic：{}", topicList);
+
+
+        TopicStats stats = admin.topics().getPartitionedStats(Constants.TOPIC_NAME, true);
+        int totalConsumers = stats.getSubscriptions().values().stream()
+                .mapToInt(sub -> sub.getConsumers().size())
+                .sum();
+        System.out.println("当前总消费者数 = " + totalConsumers);
         admin.close();
 
     }

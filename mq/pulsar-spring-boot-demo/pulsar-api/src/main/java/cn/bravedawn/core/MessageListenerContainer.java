@@ -12,6 +12,8 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.task.support.ExecutorServiceAdapter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -33,17 +35,18 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
 
     private volatile boolean isInitialized = false;
     protected final Lock lifecycleLock = new ReentrantLock();
-    private Map<String, ExecutorService> executorMap = new ConcurrentHashMap<>();
     private PulsarProperties pulsarProperties;
     private PulsarClientWrapper pulsarClientWrapper;
-    private List<BlockingQueueConsumer> blockingQueueConsumers;
-    private Map<String, BlockingQueueConsumer> blockingQueueConsumerMap;
+    private List<AbstractBlockingQueueConsumer> blockingQueueConsumers;
+    private Map<String, AbstractBlockingQueueConsumer> blockingQueueConsumerMap;
+    private Map<String, List<Consumer<PulsarMessage>>> consumersMap;
 
-    public MessageListenerContainer(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, List<BlockingQueueConsumer> blockingQueueConsumers) {
+    public MessageListenerContainer(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, List<AbstractBlockingQueueConsumer> blockingQueueConsumers) {
         this.pulsarClientWrapper = pulsarClientWrapper;
         this.pulsarProperties = pulsarProperties;
         this.blockingQueueConsumers = blockingQueueConsumers;
-        this.blockingQueueConsumerMap = blockingQueueConsumers.stream().collect(Collectors.toMap(BlockingQueueConsumer::getTopicPrefix, Function.identity()));
+        this.blockingQueueConsumerMap = blockingQueueConsumers.stream().collect(Collectors.toMap(AbstractBlockingQueueConsumer::getTopicPrefix, Function.identity()));
+        this.consumersMap = new HashMap<>();
     }
 
     public void start() {
@@ -52,15 +55,35 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
             if (!isInitialized) {
                 pulsarProperties.getTopics().forEach(topic -> {
                     PulsarProperties.ListenProperties listenConfig = topic.getListenConfig();
-                    ExecutorService executorService = new ThreadPoolExecutor(listenConfig.getWorkThreadNum(),
-                            listenConfig.getWorkThreadNum(), 60L, TimeUnit.SECONDS,
-                            new ArrayBlockingQueue<>(1), new CustomThreadFactory(topic.getTopicPrefix() + "-listen"),
-                            new ThreadPoolExecutor.DiscardPolicy());
-
-                    for (int i = 0; i < listenConfig.getWorkThreadNum(); i++) {
-                        executorService.submit(new AsyncMessageProcessingConsumer(blockingQueueConsumerMap.get(topic.getTopicPrefix()), topic.getTopicName(), topic.getTopicPrefix(), listenConfig));
+                    for (int i = 0; i < listenConfig.getConsumerNum(); i++) {
+                        try {
+                            Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarClient().newConsumer(JSONSchema.of(PulsarMessage.class))
+                                    .topic(topic.getTopicName())
+                                    .subscriptionName(topic.getTopicPrefix() + "-listen-" + NetUtil.getLocalhostStr() + "-" + i+1)
+                                    .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+                                    .messageListener((consume, msg) -> {
+                                        try {
+                                            System.out.println("收到消息: " + new String(msg.getData()));
+                                            blockingQueueConsumerMap.get(topic.getTopicPrefix()).handleConsumer(msg.getValue());
+                                            consume.acknowledge(msg);
+                                        } catch (Exception e) {
+                                            blockingQueueConsumerMap.get(topic.getTopicPrefix()).exceptionHandle(e);
+                                            consume.negativeAcknowledge(msg);
+                                        }
+                                    })
+                                    .subscribe();
+                            if (consumersMap.get(topic) == null) {
+                                List<Consumer<PulsarMessage>> consumerList = new ArrayList<>();
+                                consumerList.add(pulsarMessageConsumer);
+                                consumersMap.put(topic.getTopicPrefix(), consumerList);
+                            } else {
+                                consumersMap.get(topic.getTopicPrefix()).add(pulsarMessageConsumer);
+                            }
+                        } catch (PulsarClientException e) {
+                            log.error("创建消费者出现异常，topic={}", topic.getTopicName());
+                            log.error("创建消费者出现异常", e);
+                        }
                     }
-                    executorMap.put(topic.getTopicPrefix(), executorService);
                 });
 
                 isInitialized = true;
@@ -72,8 +95,8 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
 
     public void unload() {
         // 关闭线程池
-        blockingQueueConsumerMap.forEach((topic, consumer) -> {
-            consumer.getConsumerList().forEach(c -> {
+        consumersMap.forEach((topic, consumers) -> {
+            consumers.forEach(c -> {
                 try {
                     c.close();
                 } catch (PulsarClientException e) {
@@ -83,65 +106,15 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
             log.info("{}主题的消费者已关闭", topic);
         });
 
-        executorMap.forEach((topic, executor) -> {
-            executor.shutdown();
-            log.info("{}主题的线程池已关闭", topic);
-        });
     }
 
     @Override
     public void destroy() throws Exception {
-
+        unload();
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
         start();
-    }
-
-
-    private final class AsyncMessageProcessingConsumer implements Runnable {
-
-        private BlockingQueueConsumer blockingQueueConsumer;
-        private String topicName;
-        private String subscriptionNamePrefix;
-        private int maxRetryCount;
-        private String retryLetterTopicName;
-        private String deadLetterTopicName;
-        private AtomicInteger serialNo = new AtomicInteger(0);
-
-
-        public AsyncMessageProcessingConsumer(BlockingQueueConsumer consumer, String topicName, String topicPrefix, PulsarProperties.ListenProperties listenConfig) {
-            this.blockingQueueConsumer = consumer;
-            this.topicName = topicName;
-            this.subscriptionNamePrefix = topicPrefix;
-            this.maxRetryCount = listenConfig.getMaxRetryCount();
-            this.deadLetterTopicName = listenConfig.getDeadLetterTopicName();
-            this.retryLetterTopicName = listenConfig.getRetryLetterTopicName();
-        }
-
-        @Override
-        public void run() {
-            try {
-                Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarClient().newConsumer(JSONSchema.of(PulsarMessage.class))
-                        .topic(topicName)
-                        .subscriptionName(subscriptionNamePrefix + "-listen-" + NetUtil.getLocalhostStr() + "-" + serialNo.incrementAndGet())
-                        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-                        .messageListener((consume, msg) -> {
-                            try {
-                                System.out.println("收到消息: " + new String(msg.getData()));
-                                blockingQueueConsumer.handleConsumer(msg.getValue());
-                                consume.acknowledge(msg);
-                            } catch (Exception e) {
-                                blockingQueueConsumer.exceptionHandle(e);
-                                consume.negativeAcknowledge(msg);
-                            }
-                        })
-                        .subscribe();
-                blockingQueueConsumer.getConsumerList().add(pulsarMessageConsumer);
-            } catch (PulsarClientException e) {
-                log.error("pulsar消费端出现异常", e);
-            }
-        }
     }
 }

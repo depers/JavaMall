@@ -1,0 +1,7 @@
+
+servlet:
+  port: 8080
+
+pulsar:
+  client-type: producer
+

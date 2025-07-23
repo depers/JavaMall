@@ -17,11 +17,7 @@ import java.util.List;
  * @Project : pulsar-spring-boot-demo
  * @Date : Created in 2025-07-22 16:03
  */
-public abstract class BlockingQueueConsumer {
-
-    @Setter
-    @Getter
-    List<Consumer<PulsarMessage>> consumerList;
+public abstract class AbstractBlockingQueueConsumer {
 
     abstract String getTopicPrefix();
 

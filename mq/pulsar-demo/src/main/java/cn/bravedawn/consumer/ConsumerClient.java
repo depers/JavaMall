@@ -20,7 +20,7 @@ public class ConsumerClient {
         PulsarClient client = PulsarClient.builder()
                 .serviceUrl("pulsar://192.168.133.128:6650")
                 .ioThreads(1)
-                .listenerThreads(1)
+                .listenerThreads(3)
                 // 添加以下配置
                 .build();
 

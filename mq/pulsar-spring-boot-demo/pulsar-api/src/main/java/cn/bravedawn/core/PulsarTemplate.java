@@ -4,6 +4,7 @@ import cn.bravedawn.config.PulsarProperties;
 import cn.bravedawn.contant.Constant;
 import cn.bravedawn.contant.MessageStatus;
 import cn.bravedawn.dao.MqRecordMapper;
+import cn.bravedawn.toolkit.ApplicationContextHolder;
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.net.NetUtil;
 import cn.hutool.json.JSONUtil;
@@ -33,12 +34,12 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
     private final PulsarClientWrapper pulsarClientWrapper;
     private final PulsarProperties pulsarProperties;
     private final Map<String, Producer<PulsarMessage>> producerMap = new HashMap<>();
-    private final MqRecordMapper mqRecordMapper;
+    private final ApplicationContextHolder applicationContextHolder;
 
-    public PulsarTemplate(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, MqRecordMapper mqRecordMapper) {
+    public PulsarTemplate(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, ApplicationContextHolder applicationContextHolder) {
         this.pulsarClientWrapper = pulsarClientWrapper;
         this.pulsarProperties = pulsarProperties;
-        this.mqRecordMapper = mqRecordMapper;
+        this.applicationContextHolder = applicationContextHolder;
     }
 
     @Override
@@ -73,6 +74,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
     public void sendMessage(PulsarMessage pulsarMessage) {
         // 判断当前消息是否为新消息，若是需要入库
         if (pulsarMessage.getMessageId() == null) {
+            MqRecordMapper mqRecordMapper = applicationContextHolder.getBean(MqRecordMapper.class);
             PulsarProperties.ProducerConfig topicProperties = pulsarProperties.getPulsarConfig().getProducer();
             log.info("首次发送该消息，message={}", pulsarMessage);
             MqRecord mqRecord = new MqRecord();

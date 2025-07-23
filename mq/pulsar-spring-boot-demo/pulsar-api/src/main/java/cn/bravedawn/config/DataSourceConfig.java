@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * @Description : TODO
@@ -40,7 +41,7 @@ public class DataSourceConfig {
     @Primary
     public DataSource dataSource() throws SQLException {
         DruidDataSource dataSource = new DruidDataSource();
-        dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/pulsar?characterEncoding=UTF-8&useSSL=false&serverTimeZone=Asia/Shanghai&rewriteBatchedStatements=true");
+        dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/pulsar?characterEncoding=UTF-8&useSSL=false&serverTimeZone=Asia/Shanghai&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true");
         dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
         dataSource.setUsername("root");
         dataSource.setPassword("fx1212");
@@ -116,7 +117,7 @@ public class DataSourceConfig {
 
     public Interceptor getSqlCostInterceptor() {
         Interceptor interceptor = new SqlCostInterceptor();
-        interceptor.setProperties(null);
+        interceptor.setProperties(new Properties());
         return interceptor;
     }
 

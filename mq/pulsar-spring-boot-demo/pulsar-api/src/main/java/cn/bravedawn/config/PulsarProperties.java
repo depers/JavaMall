@@ -1,5 +1,7 @@
 package cn.bravedawn.config;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.List;
  * @Date : Created in 2025-07-21 16:44
  */
 @Data
+@JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
 public class PulsarProperties {
 
     private PulsarConfig pulsarConfig;
@@ -18,8 +21,10 @@ public class PulsarProperties {
     private List<TopicProperties> topics;
 
 
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class PulsarConfig {
         private String serviceUrl;
+        private String serviceHttpUrl;
         private String namespace;
         private ProducerConfig producer;
         private ConsumerConfig consumer;
@@ -39,8 +44,13 @@ public class PulsarProperties {
         public ConsumerConfig getConsumer() {
             return consumer;
         }
+
+        public String getServiceHttpUrl() {
+            return serviceHttpUrl;
+        }
     }
 
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class ProducerConfig {
         private int ioThreads;
         private int listenerThreads;
@@ -65,6 +75,7 @@ public class PulsarProperties {
         }
     }
 
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class ConsumerConfig {
         private int ioThreads;
         private int listenerThreads;
@@ -79,6 +90,7 @@ public class PulsarProperties {
     }
 
 
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class TopicProperties {
 
         private String topicName;
@@ -103,9 +115,11 @@ public class PulsarProperties {
         }
     }
 
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class ListenProperties {
+        private boolean enableRetry;
         private int maxRetryCount;
-        private int workThreadNum;
+        private int consumerNum;
         private String retryLetterTopicName;
         private String deadLetterTopicName;
 
@@ -121,8 +135,12 @@ public class PulsarProperties {
             return maxRetryCount;
         }
 
-        public int getWorkThreadNum() {
-            return workThreadNum;
+        public int getConsumerNum() {
+            return consumerNum;
+        }
+
+        public boolean isEnableRetry() {
+            return enableRetry;
         }
     }
 }

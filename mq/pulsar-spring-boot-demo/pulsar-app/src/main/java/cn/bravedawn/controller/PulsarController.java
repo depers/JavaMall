@@ -1,10 +1,14 @@
 package cn.bravedawn.controller;
 
+import cn.bravedawn.contant.PriorityEnum;
 import cn.bravedawn.core.PulsarMessage;
 import cn.bravedawn.core.PulsarTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Description : TODO
@@ -22,8 +26,14 @@ public class PulsarController {
     @GetMapping("/sendMsg")
     public String sendMsg() {
         PulsarMessage pulsarMessage = new PulsarMessage();
-        pulsarMessage.setTopicPrefix();
-        pulsarTemplate.sendMessage();
+        pulsarMessage.setTopicPrefix("sms");
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("hello", 1);
+        pulsarMessage.setProperties(properties);
+        pulsarMessage.setPriorityEnum(PriorityEnum.NORMAL);
+
+        pulsarTemplate.sendMessage(pulsarMessage);
+        return "success";
     }
 
 }

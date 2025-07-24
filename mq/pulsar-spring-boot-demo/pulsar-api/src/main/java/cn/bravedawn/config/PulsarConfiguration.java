@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -45,6 +46,7 @@ public class PulsarConfiguration {
     }
 
     @Bean
+    @ConditionalOnProperty(value = "pulsar.client-type", havingValue = "producer", matchIfMissing = true)
     public PulsarTemplate pulsarTemplate(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, ApplicationContextHolder applicationContextHolder) {
         return new PulsarTemplate(pulsarClientWrapper, pulsarProperties, applicationContextHolder);
     }

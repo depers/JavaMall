@@ -44,8 +44,9 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
 
     @Override
     public void destroy() throws Exception {
-        for (Producer<PulsarMessage> producer : producerMap.values()) {
-            producer.close();
+        for (Map.Entry<String, Producer<PulsarMessage>> entry : producerMap.entrySet()) {
+            entry.getValue().close();
+            log.info("{}主题的生产者已关闭", entry.getKey());
         }
     }
 
@@ -91,6 +92,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
             mqRecord.setCreateUser(Constant.SYSTEM);
             mqRecord.setUpdateUser(Constant.SYSTEM);
             mqRecordMapper.insert(mqRecord);
+            pulsarMessage.setMessageId(mqRecord.getId());
         } else {
             log.info("重发该消息，message={}", pulsarMessage);
         }

@@ -34,13 +34,21 @@ public class TopicConfigurationClient {
 
         List<String> topicList = admin.topics().getList(Constants.NAMESPACE_NAME);
         log.info("获取该命名空间下的所有topic：{}", topicList);
+//
+//
+//        TopicStats stats = admin.topics().getPartitionedStats(Constants.TOPIC_NAME, true);
+//        int totalConsumers = stats.getSubscriptions().values().stream()
+//                .mapToInt(sub -> sub.getConsumers().size())
+//                .sum();
+//        System.out.println("当前总消费者数 = " + totalConsumers);
 
 
-        TopicStats stats = admin.topics().getPartitionedStats(Constants.TOPIC_NAME, true);
-        int totalConsumers = stats.getSubscriptions().values().stream()
-                .mapToInt(sub -> sub.getConsumers().size())
-                .sum();
-        System.out.println("当前总消费者数 = " + totalConsumers);
+//        admin.topics().delete("persistent://public/siis/sms-partition-0");
+//        admin.topics().delete("persistent://public/siis/sms-partition-1");
+        admin.topics().delete("persistent://public/siis/sms");
+
+        String topic = "persistent://public/siis/sms";
+        admin.topics().unload(topic);
         admin.close();
 
     }

@@ -17,13 +17,13 @@ import java.util.List;
  * @Project : pulsar-spring-boot-demo
  * @Date : Created in 2025-07-22 16:03
  */
-public abstract class AbstractBlockingQueueConsumer {
+public interface AbstractBlockingQueueConsumer {
 
-    abstract String getTopicPrefix();
+    String getTopicPrefix();
 
-    abstract void handleConsumer(PulsarMessage pulsarMessage);
+    void handleConsumer(PulsarMessage pulsarMessage);
 
-    abstract void exceptionHandle(Exception e);
+    void exceptionHandle(Throwable e);
 
 
 }

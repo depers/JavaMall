@@ -91,7 +91,7 @@ public class SqlCostInterceptor implements Interceptor {
     @Override
     public void setProperties(Properties properties) {
         String cost = properties.getProperty("normalCost", "200");
-        String isUse = properties.getProperty("isOpenSqlFormat", "false");
+        String isUse = properties.getProperty("isOpenSqlFormat", "true");
 
         normalCost = Long.valueOf(cost);
         isOpenSqlFormat = Boolean.valueOf(isUse);

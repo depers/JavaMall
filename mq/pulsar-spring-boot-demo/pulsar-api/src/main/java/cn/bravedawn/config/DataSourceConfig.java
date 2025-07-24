@@ -11,6 +11,7 @@ import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.type.JdbcType;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +34,7 @@ import java.util.Properties;
  */
 
 @Configuration
-@MapperScan("com.bravedawn.**.dao")
+@MapperScan("cn.bravedawn.dao")
 public class DataSourceConfig {
 
 
@@ -76,6 +77,7 @@ public class DataSourceConfig {
      * Druid地址映射
      */
     @Bean
+    @ConditionalOnWebApplication
     public ServletRegistrationBean<StatViewServlet> statViewServlet() {
         StatViewServlet statViewServlet = new StatViewServlet();
         ServletRegistrationBean<StatViewServlet> registrationBean = new ServletRegistrationBean<>();
@@ -95,7 +97,7 @@ public class DataSourceConfig {
         MybatisSqlSessionFactoryBean sqlSessionFactoryBean = new MybatisSqlSessionFactoryBean();
         sqlSessionFactoryBean.setDataSource(dataSource);
 
-        Resource[] mapperLocation = new PathMatchingResourcePatternResolver().getResources("classpath*:mapper/*.xml");
+        Resource[] mapperLocation = new PathMatchingResourcePatternResolver().getResources("classpath*:mapper/**/*.xml");
         sqlSessionFactoryBean.setMapperLocations(mapperLocation);
         sqlSessionFactoryBean.setConfiguration(createConfig());
         return sqlSessionFactoryBean.getObject();

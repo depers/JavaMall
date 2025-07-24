@@ -4,9 +4,7 @@ import cn.bravedawn.config.PulsarProperties;
 import cn.hutool.core.net.NetUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pulsar.client.api.Consumer;
-import org.apache.pulsar.client.api.PulsarClientException;
-import org.apache.pulsar.client.api.SubscriptionInitialPosition;
+import org.apache.pulsar.client.api.*;
 import org.apache.pulsar.client.impl.schema.JSONSchema;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -55,15 +53,18 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
             if (!isInitialized) {
                 pulsarProperties.getTopics().forEach(topic -> {
                     PulsarProperties.ListenProperties listenConfig = topic.getListenConfig();
-                    for (int i = 0; i < listenConfig.getConsumerNum(); i++) {
+                    for (int i = 1; i <= listenConfig.getConsumerNum(); i++) {
                         try {
                             Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarClient().newConsumer(JSONSchema.of(PulsarMessage.class))
                                     .topic(topic.getTopicName())
-                                    .subscriptionName(topic.getTopicPrefix() + "-listen-" + NetUtil.getLocalhostStr() + "-" + i+1)
+                                    .subscriptionType(SubscriptionType.Shared)
+                                    .subscriptionMode(SubscriptionMode.Durable)
+                                    .subscriptionName(topic.getTopicPrefix() + "-subscription")
+                                    .consumerName(topic.getTopicPrefix() + "-listener-" + NetUtil.getLocalhostStr() + "-" + i)
                                     .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
                                     .messageListener((consume, msg) -> {
                                         try {
-                                            System.out.println("收到消息: " + new String(msg.getData()));
+                                            log.info("收到消息: " + new String(msg.getData()));
                                             blockingQueueConsumerMap.get(topic.getTopicPrefix()).handleConsumer(msg.getValue());
                                             consume.acknowledge(msg);
                                         } catch (Exception e) {

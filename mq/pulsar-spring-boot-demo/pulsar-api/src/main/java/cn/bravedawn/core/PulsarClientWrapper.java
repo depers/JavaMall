@@ -80,7 +80,9 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
                 .build()) {
 
             List<String> topicList = admin.topics().getList(pulsarConfig.getNamespace());
-            List<String> simplifyList  = topicList.stream().map(item -> item.substring(0, item.indexOf("partition")-1)).distinct().collect(Collectors.toList());
+            List<String> simplifyList  = topicList.stream()
+                    .filter(item -> item.contains("partition-"))
+                    .map(item -> item.substring(0, item.indexOf("partition-")-1)).distinct().collect(Collectors.toList());
             List<PulsarProperties.TopicProperties> existTopics = pulsarProperties.getTopics().stream().filter(item -> simplifyList.contains(item.getTopicName())).collect(Collectors.toList());
             List<PulsarProperties.TopicProperties> noExistTopics = pulsarProperties.getTopics().stream().filter(item -> !simplifyList.contains(item.getTopicName())).collect(Collectors.toList());
             if (!existTopics.isEmpty()) {

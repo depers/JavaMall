@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * </p>
  *
  * @author baomidou
- * @since 2025-07-22
+ * @since 2025-07-24
  */
 public interface MqRecordMapper extends BaseMapper<MqRecord> {
 

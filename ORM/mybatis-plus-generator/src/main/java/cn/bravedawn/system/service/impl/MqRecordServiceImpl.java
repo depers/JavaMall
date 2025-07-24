@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  * </p>
  *
  * @author baomidou
- * @since 2025-07-22
+ * @since 2025-07-24
  */
 @Service
 public class MqRecordServiceImpl extends ServiceImpl<MqRecordMapper, MqRecord> implements IMqRecordService {

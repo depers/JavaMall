@@ -23,8 +23,8 @@ public class Base4Example {
 
     public static void main(String[] args) throws UnsupportedEncodingException {
         basicRun();
-        urlSafeRun();
-        mineRun();
+//        urlSafeRun();
+//        mineRun();
     }
 
     public static void basicRun(){

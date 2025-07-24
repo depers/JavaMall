@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
  * </p>
  *
  * @author baomidou
- * @since 2025-07-22
+ * @since 2025-07-24
  */
 @Controller
 @RequestMapping("/system/mqRecord")

@@ -48,12 +48,14 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
     public void afterPropertiesSet() throws Exception {
         PulsarProperties.PulsarConfig pulsarConfig = pulsarProperties.getPulsarConfig();
         if (EnvironmentUtil.isProducer()) {
+            log.info("客户端按照生产者模式进行配置, ioThreads={}, listenerThreads={}", pulsarConfig.getProducer().getIoThreads(), pulsarConfig.getProducer().getListenerThreads());
             pulsarClient = PulsarClient.builder()
                     .ioThreads(pulsarConfig.getProducer().getIoThreads())
                     .listenerThreads(pulsarConfig.getProducer().getListenerThreads())
                     .serviceUrl(pulsarConfig.getServiceUrl())
                     .build();
         } else {
+            log.info("客户端按照消费者模式进行配置, ioThreads={}, listenerThreads={}", pulsarConfig.getConsumer().getIoThreads(), pulsarConfig.getConsumer().getListenerThreads());
             pulsarClient = PulsarClient.builder()
                     .ioThreads(pulsarConfig.getConsumer().getIoThreads())
                     .listenerThreads(pulsarConfig.getConsumer().getListenerThreads())

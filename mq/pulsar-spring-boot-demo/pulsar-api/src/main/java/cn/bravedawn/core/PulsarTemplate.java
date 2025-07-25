@@ -4,6 +4,7 @@ import cn.bravedawn.config.PulsarProperties;
 import cn.bravedawn.contant.Constant;
 import cn.bravedawn.contant.MessageStatus;
 import cn.bravedawn.dao.MqRecordMapper;
+import cn.bravedawn.interceptor.SendSuccessInterceptor;
 import cn.bravedawn.toolkit.ApplicationContextHolder;
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.net.NetUtil;
@@ -67,6 +68,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
                     .batchingMaxBytes(512 * 1024)
                     .batchingMaxPublishDelay(50, TimeUnit.MILLISECONDS)
                     .batchingMaxMessages(500)
+                    .intercept(new SendSuccessInterceptor())
                     .create();
             producerMap.put(topic.getTopicPrefix(), producer);
         }

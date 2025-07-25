@@ -1,5 +1,6 @@
 package cn.bravedawn.dao;
 
+import cn.bravedawn.core.MqRecord;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

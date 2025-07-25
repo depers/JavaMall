@@ -46,7 +46,7 @@ public class MqRecord implements Serializable {
      * 发送状态，0-发送中，1-发送成功，2-发送失败
      */
     @TableField("status")
-    private Boolean status;
+    private Integer status;
 
     /**
      * 下次重试时间

@@ -48,8 +48,8 @@ public class PulsarConfiguration {
 
     @Bean
     @Conditional(PulsarClientTypeCondition.class)
-    public PulsarTemplate pulsarTemplate(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, ApplicationContextHolder applicationContextHolder) {
-        return new PulsarTemplate(pulsarClientWrapper, pulsarProperties, applicationContextHolder);
+    public PulsarTemplate pulsarTemplate(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties) {
+        return new PulsarTemplate(pulsarClientWrapper, pulsarProperties);
     }
 
 

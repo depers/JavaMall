@@ -3,6 +3,7 @@ package cn.bravedawn.core;
 import cn.bravedawn.contant.PriorityEnum;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -17,6 +18,7 @@ public class PulsarMessage {
 
     private Long messageId;
     private String topicPrefix;
+    private Date firstSendTime;
     private PriorityEnum priorityEnum;
     private Map<String, Object> properties;
 }

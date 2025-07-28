@@ -19,7 +19,7 @@ public class EnvironmentUtil {
         ConfigurableEnvironment configurableEnvironment = ApplicationContextHolder.getBean(ConfigurableEnvironment.class);
         String pulsarType = configurableEnvironment.getProperty("pulsar.client-type");
         Preconditions.checkArgument(StringUtils.isNotBlank(pulsarType), "pulsar客户端类型需要配置");
-        return StringUtils.equals("producer", pulsarType);
+        return StringUtils.equals("producer", pulsarType) || StringUtils.equals("mixture", pulsarType);
     }
 
 
@@ -27,7 +27,7 @@ public class EnvironmentUtil {
         ConfigurableEnvironment configurableEnvironment = ApplicationContextHolder.getBean(ConfigurableEnvironment.class);
         String pulsarType = configurableEnvironment.getProperty("pulsar.client-type");
         Preconditions.checkArgument(StringUtils.isNotBlank(pulsarType), "pulsar客户端类型需要配置");
-        return StringUtils.equals("consumer", pulsarType);
+        return StringUtils.equals("consumer", pulsarType) || StringUtils.equals("mixture", pulsarType);
     }
 }
 

@@ -59,14 +59,11 @@ public class Generator {
                                 .enableLombok()
                                 .enableFileOverride() // 覆盖实体类
                                 // Mapper 策略
-                                .mapperBuilder()
-                                .enableFileOverride() // 覆盖 Mapper 接口
+                                .mapperBuilder().enableFileOverride().enableBaseColumnList().enableBaseResultMap() // 覆盖 Mapper 接口
                                 // Service 策略
-                                .serviceBuilder()
-                                .enableFileOverride() // 覆盖 Service 接口及实现
+                                .serviceBuilder().enableFileOverride() // 覆盖 Service 接口及实现
                                 // Controller 策略
-                                .controllerBuilder()
-                                .enableFileOverride() // 覆盖 Controller 类
+                                .controllerBuilder().enableFileOverride() // 覆盖 Controller 类
                 )
                 .templateEngine(new FreemarkerTemplateEngine()) // 使用Freemarker引擎模板，默认的是Velocity引擎模板
                 .execute();

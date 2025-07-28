@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.bravedawn.dao.MqRecordMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.bravedawn.core.MqRecord">
+        <id column="id" property="id" />
+        <result column="msg_content" property="msgContent" typeHandler="cn.bravedawn.mybatis.typehandler.MessageJsonTypeHandler" />
+        <result column="try_count" property="tryCount" />
+        <result column="status" property="status" />
+        <result column="next_retry_time" property="nextRetryTime" />
+        <result column="create_user" property="createUser" />
+        <result column="create_time" property="createTime" />
+        <result column="update_user" property="updateUser" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, msg_content, try_count, status, next_retry_time, create_user, create_time, update_user, update_time
+    </sql>
+
+    <select id="fetchTimeoutMessageCount" resultType="int">
+        select
+            count(*)
+        from
+            t_mq_record
+        where
+            status = #{status}
+        and
+            try_count &lt; #{sendMaxRetryCount}
+        and
+            next_retry_time &gt; now()
+        and
+            create_time &gt; #{startTime}
+    </select>
+
+    <select id="fetchTimeoutMessage" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from
+            t_mq_record
+    </select>
+
+
+    <update id="updateRetryCount" parameterType="map">
+        update
+            t_mq_record
+        set
+            try_count = try_count + 1
+        where
+            id = #{id}
+        and
+            create_time = #{createTime}
+    </update>
+
+</mapper>

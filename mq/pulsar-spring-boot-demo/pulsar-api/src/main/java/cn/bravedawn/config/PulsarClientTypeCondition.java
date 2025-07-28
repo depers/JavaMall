@@ -21,6 +21,6 @@ public class PulsarClientTypeCondition implements Condition {
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
         String property = context.getEnvironment().getProperty("pulsar.client-type", "");
         Preconditions.checkArgument(StringUtils.isNotBlank(property), "pulsar客户端类型必须指定");
-        return Arrays.asList(property.split(",")).contains("producer");
+        return property.equals("mixture") || property.equals("producer");
     }
 }

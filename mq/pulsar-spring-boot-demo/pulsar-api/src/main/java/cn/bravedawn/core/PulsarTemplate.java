@@ -35,12 +35,10 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
     private final PulsarClientWrapper pulsarClientWrapper;
     private final PulsarProperties pulsarProperties;
     private final Map<String, Producer<PulsarMessage>> producerMap = new HashMap<>();
-    private final ApplicationContextHolder applicationContextHolder;
 
-    public PulsarTemplate(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, ApplicationContextHolder applicationContextHolder) {
+    public PulsarTemplate(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties) {
         this.pulsarClientWrapper = pulsarClientWrapper;
         this.pulsarProperties = pulsarProperties;
-        this.applicationContextHolder = applicationContextHolder;
     }
 
     @Override
@@ -77,7 +75,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
     public void sendMessage(PulsarMessage pulsarMessage) {
         // 判断当前消息是否为新消息，若是需要入库
         if (pulsarMessage.getMessageId() == null) {
-            MqRecordMapper mqRecordMapper = applicationContextHolder.getBean(MqRecordMapper.class);
+            MqRecordMapper mqRecordMapper = ApplicationContextHolder.getBean(MqRecordMapper.class);
             PulsarProperties.ProducerConfig topicProperties = pulsarProperties.getPulsarConfig().getProducer();
             log.info("首次发送该消息，message={}", pulsarMessage);
             MqRecord mqRecord = new MqRecord();
@@ -95,6 +93,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
             mqRecord.setUpdateUser(Constant.SYSTEM);
             mqRecordMapper.insert(mqRecord);
             pulsarMessage.setMessageId(mqRecord.getId());
+            pulsarMessage.setFirstSendTime(sendTime);
         } else {
             log.info("重发该消息，message={}", pulsarMessage);
         }
@@ -102,11 +101,18 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
         producerMap.get(pulsarMessage.getTopicPrefix())
                 .newMessage()
                 .value(pulsarMessage)
+                // 事件时间
+                .eventTime(pulsarMessage.getFirstSendTime().getTime())
                 .sequenceId(pulsarMessage.getMessageId())
                 .sendAsync()
                 .thenApply(messageId -> {
                     // 这里需要同步更新数据库
-                    log.info("消息发送成功，pulsarMessage={}", pulsarMessage);
+                    log.info("消息发送成功，更新消息的状态为发送成功, messageId={}", pulsarMessage.getMessageId());
+                    MqRecord record = new MqRecord();
+                    record.setId(pulsarMessage.getMessageId());
+                    record.setStatus(MessageStatus.SEND_SUCCESS.getStatus());
+                    MqRecordMapper mqRecordMapper = ApplicationContextHolder.getBean(MqRecordMapper.class);
+                    mqRecordMapper.updateById(record);
                     return messageId;
                 }).exceptionally(e -> {
                     log.error("消息发送失败", e);

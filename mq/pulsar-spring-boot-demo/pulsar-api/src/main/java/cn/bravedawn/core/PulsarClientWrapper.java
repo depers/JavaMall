@@ -54,7 +54,8 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
                     .listenerThreads(pulsarConfig.getProducer().getListenerThreads())
                     .serviceUrl(pulsarConfig.getServiceUrl())
                     .build();
-        } else {
+        }
+        if (EnvironmentUtil.isConsumer()){
             log.info("客户端按照消费者模式进行配置, ioThreads={}, listenerThreads={}", pulsarConfig.getConsumer().getIoThreads(), pulsarConfig.getConsumer().getListenerThreads());
             pulsarClient = PulsarClient.builder()
                     .ioThreads(pulsarConfig.getConsumer().getIoThreads())

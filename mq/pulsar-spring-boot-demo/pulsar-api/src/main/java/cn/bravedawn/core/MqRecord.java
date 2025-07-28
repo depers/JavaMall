@@ -1,5 +1,6 @@
 package cn.bravedawn.core;
 
+import cn.bravedawn.mybatis.typehandler.MessageJsonTypeHandler;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -33,8 +34,8 @@ public class MqRecord implements Serializable {
     /**
      * 消息内容
      */
-    @TableField("msg_content")
-    private String msgContent;
+    @TableField(value = "msg_content", typeHandler = MessageJsonTypeHandler.class)
+    private PulsarMessage msgContent;
 
     /**
      * 重发次数

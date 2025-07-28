@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -34,7 +35,7 @@ import java.util.Properties;
  */
 
 @Configuration
-@MapperScan("cn.bravedawn.dao")
+@EnableAspectJAutoProxy
 public class DataSourceConfig {
 
 
@@ -54,11 +55,12 @@ public class DataSourceConfig {
         // 配置获取连接等待超时的时间
         dataSource.setMaxWait(6000);
         // 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
-        dataSource.setTimeBetweenEvictionRunsMillis(2000);
+        dataSource.setTimeBetweenEvictionRunsMillis(60000);
         // 配置一个连接在池中最小生存的时间，单位是毫秒
         dataSource.setMinEvictableIdleTimeMillis(600000);
         dataSource.setMaxEvictableIdleTimeMillis(900000);
 
+        dataSource.setKeepAlive(true);
         dataSource.setValidationQuery("select 1");
         dataSource.setTestWhileIdle(true);
         dataSource.setTestOnBorrow(false);
@@ -119,7 +121,6 @@ public class DataSourceConfig {
 
     public Interceptor getSqlCostInterceptor() {
         Interceptor interceptor = new SqlCostInterceptor();
-        interceptor.setProperties(new Properties());
         return interceptor;
     }
 

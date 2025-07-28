@@ -1,13 +1,9 @@
 package cn.bravedawn.interceptor;
 
-import cn.bravedawn.contant.MsgRecordStatusEnum;
+import cn.bravedawn.contant.MessageStatus;
 import cn.bravedawn.core.MqRecord;
-import cn.bravedawn.core.PulsarMessage;
 import cn.bravedawn.dao.MqRecordMapper;
 import cn.bravedawn.toolkit.ApplicationContextHolder;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
@@ -57,12 +53,7 @@ public class SendSuccessInterceptor implements ProducerInterceptor {
     @Override
     public void onSendAcknowledgement(Producer producer, Message message, MessageId msgId, Throwable exception) {
         if (exception == null) {
-            log.info("消息发送成功，更新消息的状态为发送成功, messageId={}", message.getSequenceId());
-            MqRecord record = new MqRecord();
-            record.setStatus(MsgRecordStatusEnum.SEND_SUCCESS.getStatus());
-            MqRecordMapper mqRecordMapper = ApplicationContextHolder.getBean(MqRecordMapper.class);
-            LambdaUpdateWrapper<MqRecord> lambdaUpdateWrapper = Wrappers.lambdaUpdate(MqRecord.class).eq(MqRecord::getId, message.getSequenceId());
-            mqRecordMapper.update(record, lambdaUpdateWrapper);
+            // 补充针对特殊topic的处理逻辑
         }
     }
 }

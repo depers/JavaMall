@@ -3,6 +3,7 @@ package cn.bravedawn.core;
 import cn.bravedawn.config.PulsarProperties;
 import cn.bravedawn.contant.SchemaDefinitionConfig;
 import cn.hutool.core.net.NetUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.*;
@@ -52,6 +53,11 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
         lifecycleLock.lock();
         try {
             if (!isInitialized) {
+                DeadLetterProducerBuilderCustomizer producerBuilderCustomizer = (context, producerBuilder) -> {
+                    producerBuilder.enableBatching(true);
+                    producerBuilder.enableChunking(false);
+                };
+
                 pulsarProperties.getTopics().forEach(topic -> {
                     PulsarProperties.ListenProperties listenConfig = topic.getListenConfig();
                     for (int i = 1; i <= listenConfig.getConsumerNum(); i++) {
@@ -62,16 +68,41 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
                                     .subscriptionType(SubscriptionType.Shared)
                                     .subscriptionMode(SubscriptionMode.Durable)
                                     .subscriptionName(topic.getTopicPrefix() + "-subscription")
-                                    .consumerName(topic.getTopicPrefix() + "-listener-" + NetUtil.getLocalhostStr() + "-" + i)
+                                    .consumerName(topic.getTopicPrefix() + "-listener-" + NetUtil.getLocalhostStr() + "-" + RandomUtil.randomString(4))
                                     .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+                                    // 开启消息重试
+                                    .enableRetry(listenConfig.isEnableRetry())
+                                    // 构建死信队列策略
+                                    .deadLetterPolicy(DeadLetterPolicy.builder()
+                                            // 最大重试投递次数，也就是如果第一次消费失败，还会重新再投递一次
+                                            .maxRedeliverCount(listenConfig.getMaxRetryCount())
+                                            // 死信主题
+                                            .deadLetterTopic(listenConfig.getRetryLetterTopicName())
+                                            // 重试主题
+                                            .retryLetterTopic(listenConfig.getDeadLetterTopicName())
+                                            // 配置重试信件主题的生产者
+                                            .retryLetterProducerBuilderCustomizer(producerBuilderCustomizer)
+                                            .deadLetterProducerBuilderCustomizer(producerBuilderCustomizer)
+                                            .build())
                                     .messageListener((consume, msg) -> {
+                                        String msgStr = new String(msg.getData());
                                         try {
-                                            log.info("收到消息: " + new String(msg.getData()));
+                                            log.info("收到消息: {}", msgStr );
                                             blockingQueueConsumerMap.get(topic.getTopicPrefix()).handleConsumer(msg.getValue());
                                             consume.acknowledge(msg);
                                         } catch (Exception e) {
                                             blockingQueueConsumerMap.get(topic.getTopicPrefix()).exceptionHandle(e);
-                                            consume.negativeAcknowledge(msg);
+                                            if (listenConfig.isEnableRetry()) {
+                                                log.info("消息重试已开启，重试消费该消息。msg={}", msgStr);
+                                                try {
+                                                    consume.reconsumeLater(msg, listenConfig.getRetryDelayTime(), TimeUnit.MILLISECONDS);
+                                                } catch (PulsarClientException ex) {
+                                                    log.error("将消息投递到重试队列异常", e);
+                                                }
+                                            } else {
+                                                log.info("消息重试已关闭，不再重试消费该消息，确认消费。msg={}", msgStr);
+                                            }
+
                                         }
                                     })
                                     .subscribe();

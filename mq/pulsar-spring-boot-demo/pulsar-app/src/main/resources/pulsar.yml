@@ -19,6 +19,7 @@ topics:
     listen-config:
       enable-retry: true
       max-retry-count: 3
+      retry-delay-time: 10000
       consumer-num: 3
       retry-letter-topic-name: persistent://public/siis/retry_sms
       dead-letter-topic-name: persistent://public/siis/dead_sms

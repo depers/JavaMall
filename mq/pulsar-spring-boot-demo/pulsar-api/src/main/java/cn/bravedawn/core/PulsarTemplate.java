@@ -11,6 +11,7 @@ import cn.bravedawn.toolkit.JsonUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.net.NetUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
@@ -63,7 +64,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
         for (PulsarProperties.TopicProperties topic : pulsarProperties.getTopics()) {
             Producer<PulsarMessage> producer = pulsarClientWrapper.getPulsarClient()
                     .newProducer(jsonSchema)
-                    .producerName(topic.getTopicPrefix() + "_" + NetUtil.getLocalhostStr())
+                    .producerName(topic.getTopicPrefix() + "-producer-" + NetUtil.getLocalhostStr() + "-" + RandomUtil.randomString(4))
                     // 访问模式
                     .accessMode(ProducerAccessMode.Shared)
                     // 路由模式

@@ -102,6 +102,165 @@
    * 普通消费者：cn/bravedawn/consumer/RetryConsumerClient.java
    * 死信消费者：cn/bravedawn/consumer/RetryDeadLetterConsumerClient.java
 
+### 如果关闭消息重试，但是配置了重试的逻辑，重试会生效吗？
+
+1. 第一种情况，我们修改cn/bravedawn/consumer/RetryConsumerClient.java的代码，如下：
+
+   ```java
+   Consumer<DemoData> consumer = client.newConsumer(JSONSchema.of(DemoData.class))
+                   .topic("persistent://public/siis/partitionedTopic")
+                   .subscriptionName("my-subscription")
+                   .subscriptionType(SubscriptionType.Shared)
+                   .subscriptionMode(SubscriptionMode.Durable)
+                   .enableBatchIndexAcknowledgment(true)
+                   .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+                   // 关闭消息重试
+                   .enableRetry(false)
+                   // 构建死信队列策略
+                   .deadLetterPolicy(DeadLetterPolicy.builder()
+                           // 最大重试投递次数，也就是如果第一次消费失败，还会重新再投递一次
+                           .maxRedeliverCount(1)
+                           // 死信主题
+                           .deadLetterTopic("persistent://public/siis/partitionedTopic-deadLetter")
+                           // 重试主题
+                           .retryLetterTopic("persistent://public/siis/partitionedTopic-retryLetter")
+                           // 配置重试信件主题的生产者
+                           .retryLetterProducerBuilderCustomizer(producerBuilderCustomizer)
+                           .deadLetterProducerBuilderCustomizer(producerBuilderCustomizer)
+                           .build())
+                   .messageListener((consumer1, msg) -> {
+                       try {
+                           log.info("收到消息: {}, sequenceId={}, property-sequenceId={}",
+                                   new String(msg.getData()), msg.getSequenceId(), msg.getProperties().get("ORIGIN_MESSAGE_ID"));
+                           int i = 1 / 0;
+                           consumer1.acknowledge(msg);
+                       } catch (Exception e) {
+                           log.error("消息消费出现异常", e);
+                           // 重新消费
+                           try {
+                               Map<String, String> customProperties = new HashMap<String, String>();
+                               customProperties.put("ORIGIN_MESSAGE_ID", String.valueOf(msg.getSequenceId()));
+                               consumer1.reconsumeLater(msg, customProperties, 5, TimeUnit.SECONDS);
+                           } catch (PulsarClientException ex) {
+                               throw new RuntimeException(ex);
+                           }
+                       }
+                   })
+                   .subscribe();
+   ```
+
+   在这段代码中，我们使用了`reconsumeLater()`方法，去重新消费消息。但是消费者我们设置了`enableRetry(false)`关闭重试。在这两个条件之下，我们的实验结果表明，如果发送了一条消息过来，这条消息被消费的时候会报错：
+
+   ```
+   java.lang.RuntimeException: org.apache.pulsar.client.api.PulsarClientException: reconsumeLater method not supported because retryEnabled is set to false. You can enable it via ConsumerBuilder.
+   ```
+
+   意思是说，消费者已经关闭了重试，不能使用reconsumerLater()方法将消息放到重试队列。
+
+   所以，正确的处理方式应该是：
+   ```java
+   boolean enableEntry = false;
+   
+   Consumer<DemoData> consumer = client.newConsumer(JSONSchema.of(DemoData.class))
+           .topic("persistent://public/siis/partitionedTopic")
+           .subscriptionName("my-subscription")
+           .subscriptionType(SubscriptionType.Shared)
+           .subscriptionMode(SubscriptionMode.Durable)
+           .enableBatchIndexAcknowledgment(true)
+           .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+           // 开启消息重试
+           .enableRetry(false)
+           // 构建死信队列策略
+           .deadLetterPolicy(DeadLetterPolicy.builder()
+                   // 最大重试投递次数，也就是如果第一次消费失败，还会重新再投递一次
+                   .maxRedeliverCount(1)
+                   // 死信主题
+                   .deadLetterTopic("persistent://public/siis/partitionedTopic-deadLetter")
+                   // 重试主题
+                   .retryLetterTopic("persistent://public/siis/partitionedTopic-retryLetter")
+                   // 配置重试信件主题的生产者
+                   .retryLetterProducerBuilderCustomizer(producerBuilderCustomizer)
+                   .deadLetterProducerBuilderCustomizer(producerBuilderCustomizer)
+                   .build())
+           .messageListener((consumer1, msg) -> {
+               try {
+                   log.info("收到消息: {}, sequenceId={}, property-sequenceId={}",
+                           new String(msg.getData()), msg.getSequenceId(), msg.getProperties().get("ORIGIN_MESSAGE_ID"));
+                   int i = 1 / 0;
+                   consumer1.acknowledge(msg);
+               } catch (Exception e) {
+                   log.error("消息消费出现异常", e);
+   
+                   if (enableEntry) {
+                       // 重新消费
+                       try {
+                           Map<String, String> customProperties = new HashMap<String, String>();
+                           customProperties.put("ORIGIN_MESSAGE_ID", String.valueOf(msg.getSequenceId()));
+                           consumer1.reconsumeLater(msg, customProperties, 5, TimeUnit.SECONDS);
+                       } catch (PulsarClientException ex) {
+                           throw new RuntimeException(ex);
+                       }
+                   } else {
+                       try {
+                           // 如果关闭重试的话，针对于异常的消息，也进行确认
+                           consumer1.acknowledge(msg);
+                       } catch (PulsarClientException ex) {
+                           throw new RuntimeException(ex);
+                       }
+                   }
+   
+               }
+           })
+           .subscribe();
+   ```
+
+   正确的做法就是，如果消费出现异常，我们需要判断是否要支持重试，如果支持，就使用重试队列。如果不支持，则直接确认消息。
+
+2. 第二种情况，就是如果消息出现异常，我们关闭重试并且使用`negativeAcknowledge()`方法进行否定确认，我们修改cn/bravedawn/consumer/RetryConsumerClient.java的代码，如下：
+
+   ```java
+   boolean enableEntry = false;
+   
+   Consumer<DemoData> consumer = client.newConsumer(JSONSchema.of(DemoData.class))
+   .topic("persistent://public/siis/partitionedTopic")
+   .subscriptionName("my-subscription")
+   .subscriptionType(SubscriptionType.Shared)
+   .subscriptionMode(SubscriptionMode.Durable)
+   .enableBatchIndexAcknowledgment(true)
+   .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+   // 开启消息重试
+   .enableRetry(false)
+   // 构建死信队列策略
+   .deadLetterPolicy(DeadLetterPolicy.builder()
+           // 最大重试投递次数，也就是如果第一次消费失败，还会重新再投递一次
+           .maxRedeliverCount(1)
+           // 死信主题
+           .deadLetterTopic("persistent://public/siis/partitionedTopic-deadLetter")
+           // 重试主题
+           .retryLetterTopic("persistent://public/siis/partitionedTopic-retryLetter")
+           // 配置重试信件主题的生产者
+           .retryLetterProducerBuilderCustomizer(producerBuilderCustomizer)
+           .deadLetterProducerBuilderCustomizer(producerBuilderCustomizer)
+           .build())
+   .messageListener((consumer1, msg) -> {
+       try {
+           log.info("收到消息: {}, sequenceId={}, property-sequenceId={}",
+                   new String(msg.getData()), msg.getSequenceId(), msg.getProperties().get("ORIGIN_MESSAGE_ID"));
+           int i = 1 / 0;
+           consumer1.acknowledge(msg);
+       } catch (Exception e) {
+           log.error("消息消费出现异常", e);
+   
+           // 否定确认
+           consumer1.negativeAcknowledge(msg);
+   
+       }
+   })
+   .subscribe();
+   ```
+
+   经过测试我们发现，消息消费出现异常，使用否定确认消息被重新放到了topic下面。
+
 ## 5. 死信队列
 
 pulsar的死信队列由消费超时、否定确认和重试主题触发，已经在上一节中做了实践，这里不再赘述。

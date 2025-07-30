@@ -119,6 +119,7 @@ public class PulsarProperties {
     public static class ListenProperties {
         private boolean enableRetry;
         private int maxRetryCount;
+        private int retryDelayTime;
         private int consumerNum;
         private String retryLetterTopicName;
         private String deadLetterTopicName;
@@ -141,6 +142,10 @@ public class PulsarProperties {
 
         public boolean isEnableRetry() {
             return enableRetry;
+        }
+
+        public int getRetryDelayTime() {
+            return retryDelayTime;
         }
     }
 }

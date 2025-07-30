@@ -28,8 +28,8 @@ public class JsonUtil {
     static {
         objectMapper = new ObjectMapper();
         PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
-                .allowIfSubType("com.example")       // 允许 com.example 包下所有子类
-                .allowIfSubType("java.util.ArrayList")
+                .allowIfSubType("cn.bravedawn")       // 允许 com.example 包下所有子类
+                .allowIfBaseType("java.util")   // 允许 Date 本身
                 .build();
 
         objectMapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
@@ -83,7 +83,7 @@ public class JsonUtil {
         try {
             return objectMapper.readValue(data, tClass);
         } catch (Throwable e) {
-            log.error("对象json反序列化失败");
+            log.error("对象json反序列化失败", e);
         }
         return null;
     }
@@ -92,7 +92,7 @@ public class JsonUtil {
         try {
             return objectMapper.readValue(bytes, offset, length, tClass);
         } catch (Throwable e) {
-            log.error("对象json反序列化失败");
+            log.error("对象json反序列化失败", e);
         }
         return null;
     }

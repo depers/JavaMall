@@ -1,6 +1,7 @@
 package cn.bravedawn.core;
 
 import cn.bravedawn.mybatis.typehandler.MessageJsonTypeHandler;
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -28,7 +29,7 @@ public class MqRecord implements Serializable {
     /**
      * 主键
      */
-    @TableId("id")
+    @TableId(value = "id", type = IdType.INPUT)
     private Long id;
 
     /**

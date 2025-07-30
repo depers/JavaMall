@@ -90,17 +90,22 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
                                             log.info("收到消息: {}", msgStr );
                                             blockingQueueConsumerMap.get(topic.getTopicPrefix()).handleConsumer(msg.getValue());
                                             consume.acknowledge(msg);
-                                        } catch (Exception e) {
+                                        } catch (Throwable e) {
                                             blockingQueueConsumerMap.get(topic.getTopicPrefix()).exceptionHandle(e);
                                             if (listenConfig.isEnableRetry()) {
                                                 log.info("消息重试已开启，重试消费该消息。msg={}", msgStr);
                                                 try {
                                                     consume.reconsumeLater(msg, listenConfig.getRetryDelayTime(), TimeUnit.MILLISECONDS);
                                                 } catch (PulsarClientException ex) {
-                                                    log.error("将消息投递到重试队列异常", e);
+                                                    log.error("将消息投递到重试队列异常", ex);
                                                 }
                                             } else {
                                                 log.info("消息重试已关闭，不再重试消费该消息，确认消费。msg={}", msgStr);
+                                                try {
+                                                    consume.acknowledge(msg);
+                                                } catch (PulsarClientException ex) {
+                                                    log.info("消息重试，确认消息异常", e);
+                                                }
                                             }
 
                                         }

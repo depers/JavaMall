@@ -3,9 +3,12 @@ package cn.bravedawn.core;
 import cn.bravedawn.config.PulsarProperties;
 import cn.bravedawn.contant.Constant;
 import cn.bravedawn.contant.MessageStatus;
+import cn.bravedawn.contant.SchemaDefinitionConfig;
 import cn.bravedawn.dao.MqRecordMapper;
 import cn.bravedawn.interceptor.SendSuccessInterceptor;
 import cn.bravedawn.toolkit.ApplicationContextHolder;
+import cn.bravedawn.toolkit.JsonUtil;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.net.NetUtil;
 import cn.hutool.json.JSONUtil;
@@ -14,10 +17,14 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.pulsar.client.api.MessageRoutingMode;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.ProducerAccessMode;
+import org.apache.pulsar.client.api.schema.SchemaDefinition;
+import org.apache.pulsar.client.api.schema.SchemaReader;
+import org.apache.pulsar.client.api.schema.SchemaWriter;
 import org.apache.pulsar.client.impl.schema.JSONSchema;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
+import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +59,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         // 定义模式
-        JSONSchema<PulsarMessage> jsonSchema = JSONSchema.of(PulsarMessage.class);
+        JSONSchema<PulsarMessage> jsonSchema = JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA);
         for (PulsarProperties.TopicProperties topic : pulsarProperties.getTopics()) {
             Producer<PulsarMessage> producer = pulsarClientWrapper.getPulsarClient()
                     .newProducer(jsonSchema)
@@ -82,7 +89,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
             Date sendTime = new Date();
             Snowflake snowflake = new Snowflake();
             mqRecord.setId(snowflake.nextId());
-            mqRecord.setMsgContent(JSONUtil.toJsonStr(pulsarMessage));
+            mqRecord.setMsgContent(pulsarMessage);
             mqRecord.setTryCount(1);
             mqRecord.setStatus(MessageStatus.SENDING.getStatus());
             Date nextRetryTime = DateUtils.addMilliseconds(sendTime, topicProperties.getSendTimeout());

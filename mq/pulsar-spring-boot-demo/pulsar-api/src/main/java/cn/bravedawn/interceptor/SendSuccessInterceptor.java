@@ -2,6 +2,7 @@ package cn.bravedawn.interceptor;
 
 import cn.bravedawn.contant.MessageStatus;
 import cn.bravedawn.core.MqRecord;
+import cn.bravedawn.core.PulsarMessage;
 import cn.bravedawn.dao.MqRecordMapper;
 import cn.bravedawn.toolkit.ApplicationContextHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,8 @@ public class SendSuccessInterceptor implements ProducerInterceptor {
     public void onSendAcknowledgement(Producer producer, Message message, MessageId msgId, Throwable exception) {
         if (exception == null) {
             // 补充针对特殊topic的处理逻辑
+            PulsarMessage pulsarMessage = (PulsarMessage) message.getValue();
+            log.info("消息发送成功后的处理逻辑：msg={}", pulsarMessage);
         }
     }
 }

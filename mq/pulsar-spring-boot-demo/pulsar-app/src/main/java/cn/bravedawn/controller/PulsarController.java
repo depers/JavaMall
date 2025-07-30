@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +29,11 @@ public class PulsarController {
         PulsarMessage pulsarMessage = new PulsarMessage();
         pulsarMessage.setTopicPrefix("sms");
         Map<String, Object> properties = new HashMap<>();
-        properties.put("hello", 1);
+        UserDTO userDTO = new UserDTO();
+        userDTO.setName("jack");
+        userDTO.setAge(18);
+        userDTO.setBrithday(new Date());
+        properties.put("user", userDTO);
         pulsarMessage.setProperties(properties);
         pulsarMessage.setPriorityEnum(PriorityEnum.NORMAL);
 

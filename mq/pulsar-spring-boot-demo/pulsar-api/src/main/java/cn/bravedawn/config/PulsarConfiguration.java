@@ -7,8 +7,12 @@ import cn.bravedawn.core.PulsarTemplate;
 import cn.bravedawn.dao.MqRecordMapper;
 import cn.bravedawn.toolkit.ApplicationContextHolder;
 import cn.bravedawn.toolkit.YamlUtil;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pulsar.shade.com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -58,5 +62,7 @@ public class PulsarConfiguration {
     public MessageListenerContainer messageListenerContainer(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, List<AbstractBlockingQueueConsumer> blockingQueueConsumerList) {
         return new MessageListenerContainer(pulsarClientWrapper, pulsarProperties, blockingQueueConsumerList);
     }
+
+
 
 }

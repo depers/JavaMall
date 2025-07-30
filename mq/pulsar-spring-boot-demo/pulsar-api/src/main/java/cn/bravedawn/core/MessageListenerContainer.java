@@ -1,6 +1,7 @@
 package cn.bravedawn.core;
 
 import cn.bravedawn.config.PulsarProperties;
+import cn.bravedawn.contant.SchemaDefinitionConfig;
 import cn.hutool.core.net.NetUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +56,8 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
                     PulsarProperties.ListenProperties listenConfig = topic.getListenConfig();
                     for (int i = 1; i <= listenConfig.getConsumerNum(); i++) {
                         try {
-                            Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarClient().newConsumer(JSONSchema.of(PulsarMessage.class))
+                            Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarClient()
+                                    .newConsumer(JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA))
                                     .topic(topic.getTopicName())
                                     .subscriptionType(SubscriptionType.Shared)
                                     .subscriptionMode(SubscriptionMode.Durable)

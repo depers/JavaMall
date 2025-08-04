@@ -10,12 +10,15 @@ import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.common.policies.data.BacklogQuota;
+import org.apache.pulsar.common.policies.data.RetentionPolicies;
 import org.apache.pulsar.shade.io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -105,7 +108,9 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
 
             // 检测是否开启延时队列
             detectSupportDelayQueue(admin);
-
+            getRetention(admin, pulsarConfig.getNamespace());
+            getBlockLogQuotas(admin, pulsarConfig.getNamespace());
+            getTTL(admin, pulsarConfig.getNamespace());
         } catch (PulsarClientException |
                  PulsarAdminException e) {
             log.error("pulsarAdmin创建出现异常", e);
@@ -120,5 +125,23 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
 
         log.info("检测broker是否开启延时队列：delayedDeliveryEnabled={}, delayedDeliveryTickTimeMillis={}, isDelayedDeliveryDeliverAtTimeStrict={}",
                 delayedDeliveryEnabled, delayedDeliveryTickTimeMillis, isDelayedDeliveryDeliverAtTimeStrict);
+    }
+
+
+    private void getRetention(PulsarAdmin admin, String namespace) throws PulsarAdminException {
+        RetentionPolicies retention = admin.namespaces().getRetention(namespace);
+        log.info("{}命名空间下的保留策略：{}", namespace, retention);
+    }
+
+
+    private void getBlockLogQuotas(PulsarAdmin admin, String namespace) throws PulsarAdminException {
+        Map<BacklogQuota.BacklogQuotaType, BacklogQuota> backlogQuotaMap = admin.namespaces().getBacklogQuotaMap(namespace);
+        log.info("{}命名空间下的积压配额：{}", namespace, backlogQuotaMap);
+    }
+
+
+    private void getTTL(PulsarAdmin admin, String namespace) throws PulsarAdminException {
+        Integer namespaceMessageTTL = admin.namespaces().getNamespaceMessageTTL(namespace);
+        log.info("{}命名空间下消息的生存时间：{}", namespace, namespaceMessageTTL);
     }
 }

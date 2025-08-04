@@ -361,9 +361,17 @@ pulsar的死信队列由消费超时、否定确认和重试主题触发，已�
 
 采用延迟消息，在开发层面，需要做的有如下两个步骤：
 
-1. broker开启延时投递：
+1. broker开启延时投递，需要修改broker的配置文件：
+
+   * delayedDeliveryEnabled：是否支持延迟时间。
+   * delayedDeliveryTickTimeMillis：定义 Broker 检查延迟消息是否到期的时间间隔（单位：毫秒）
+   * isDelayedDeliveryDeliverAtTimeStrict：用于控制延迟消息的严格时间执行策略。当 true 时，Broker 会严格检查 deliverAt 时间，如果消息的投递时间已经过期（早于当前时间），则可能会被丢弃或立即投递，取决于 Pulsar 的具体实现。
+
 2. 消息设置延迟时间
-3. 消费端采用share
+
+   这里有两个api，一个是deliverAfter()可以设置多长时间后消费，一个是deliverAt()可以设置在固定的时间点进行消费。
+
+3. 消费端的消费模式采用shared或是key_shared。
 
 ## 8. 优先级消息
 

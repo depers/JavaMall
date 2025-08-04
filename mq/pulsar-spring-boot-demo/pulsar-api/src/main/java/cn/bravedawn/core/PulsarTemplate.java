@@ -13,6 +13,7 @@ import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.net.NetUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONUtil;
+import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.pulsar.client.api.MessageRoutingMode;
@@ -106,27 +107,54 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
             log.info("重发该消息，message={}", pulsarMessage);
         }
 
-        producerMap.get(pulsarMessage.getTopicPrefix())
-                .newMessage()
-                .value(pulsarMessage)
-                // 事件时间
-                .eventTime(pulsarMessage.getFirstSendTime().getTime())
-                // 支持延时消息
-                .deliverAfter(pulsarMessage.getDelayMills(), TimeUnit.MILLISECONDS)
-                .sequenceId(pulsarMessage.getMessageId())
-                .sendAsync()
-                .thenApply(messageId -> {
-                    // 这里需要同步更新数据库
-                    log.info("消息发送成功，更新消息的状态为发送成功, messageId={}", pulsarMessage.getMessageId());
-                    MqRecord record = new MqRecord();
-                    record.setId(pulsarMessage.getMessageId());
-                    record.setStatus(MessageStatus.SEND_SUCCESS.getStatus());
-                    MqRecordMapper mqRecordMapper = ApplicationContextHolder.getBean(MqRecordMapper.class);
-                    mqRecordMapper.updateById(record);
-                    return messageId;
-                }).exceptionally(e -> {
-                    log.error("消息发送失败", e);
-                    return null;
-                });
+
+        if (pulsarMessage.getDelayMills() == null) {
+            producerMap.get(pulsarMessage.getTopicPrefix())
+                    .newMessage()
+                    .value(pulsarMessage)
+                    // 事件时间
+                    .eventTime(pulsarMessage.getFirstSendTime().getTime())
+                    .sequenceId(pulsarMessage.getMessageId())
+                    .sendAsync()
+                    .thenApply(messageId -> {
+                        // 这里需要同步更新数据库
+                        log.info("消息发送成功，更新消息的状态为发送成功, messageId={}", pulsarMessage.getMessageId());
+                        MqRecord record = new MqRecord();
+                        record.setId(pulsarMessage.getMessageId());
+                        record.setStatus(MessageStatus.SEND_SUCCESS.getStatus());
+                        MqRecordMapper mqRecordMapper = ApplicationContextHolder.getBean(MqRecordMapper.class);
+                        mqRecordMapper.updateById(record);
+                        return messageId;
+                    }).exceptionally(e -> {
+                        log.error("消息发送失败", e);
+                        return null;
+                    });
+        } else {
+            // 这里的86400000是消息的broker中设置的未确认消息的有效时间，如果延迟时间大于该时间，有效时间到达后消息就会被清除
+            Preconditions.checkArgument(pulsarMessage.getDelayMills() > 0 && pulsarMessage.getDelayMills() < 86400000, "延迟消息的延迟时间必须大于0且小于86400000");
+            producerMap.get(pulsarMessage.getTopicPrefix())
+                    .newMessage()
+                    .value(pulsarMessage)
+                    // 事件时间
+                    .eventTime(pulsarMessage.getFirstSendTime().getTime())
+                    // 支持延时消息
+                    .deliverAfter(pulsarMessage.getDelayMills(), TimeUnit.MILLISECONDS)
+                    .sequenceId(pulsarMessage.getMessageId())
+                    .sendAsync()
+                    .thenApply(messageId -> {
+                        // 这里需要同步更新数据库
+                        log.info("消息发送成功，更新消息的状态为发送成功, messageId={}", pulsarMessage.getMessageId());
+                        MqRecord record = new MqRecord();
+                        record.setId(pulsarMessage.getMessageId());
+                        record.setStatus(MessageStatus.SEND_SUCCESS.getStatus());
+                        MqRecordMapper mqRecordMapper = ApplicationContextHolder.getBean(MqRecordMapper.class);
+                        mqRecordMapper.updateById(record);
+                        return messageId;
+                    }).exceptionally(e -> {
+                        log.error("消息发送失败", e);
+                        return null;
+                    });
+        }
+
     }
 }

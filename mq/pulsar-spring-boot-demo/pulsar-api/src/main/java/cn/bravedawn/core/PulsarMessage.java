@@ -20,5 +20,6 @@ public class PulsarMessage {
     private String topicPrefix;
     private Date firstSendTime;
     private PriorityEnum priorityEnum;
+    private Long delayMills;
     private Map<String, Object> properties;
 }

@@ -102,9 +102,23 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
                     }
                 });
             }
+
+            // 检测是否开启延时队列
+            detectSupportDelayQueue(admin);
+
         } catch (PulsarClientException |
                  PulsarAdminException e) {
             log.error("pulsarAdmin创建出现异常", e);
         }
+    }
+
+
+    public void detectSupportDelayQueue(PulsarAdmin admin) throws PulsarAdminException {
+        String delayedDeliveryEnabled = admin.brokers().getRuntimeConfigurations().get("delayedDeliveryEnabled");
+        String delayedDeliveryTickTimeMillis = admin.brokers().getRuntimeConfigurations().get("delayedDeliveryTickTimeMillis");
+        String isDelayedDeliveryDeliverAtTimeStrict = admin.brokers().getRuntimeConfigurations().get("isDelayedDeliveryDeliverAtTimeStrict");
+
+        log.info("检测broker是否开启延时队列：delayedDeliveryEnabled={}, delayedDeliveryTickTimeMillis={}, isDelayedDeliveryDeliverAtTimeStrict={}",
+                delayedDeliveryEnabled, delayedDeliveryTickTimeMillis, isDelayedDeliveryDeliverAtTimeStrict);
     }
 }

@@ -38,6 +38,11 @@ public class DelayedProducerClient {
                 // 路由模式
                 .messageRoutingMode(MessageRoutingMode.RoundRobinPartition)
                 .topic("persistent://public/siis/partitionedTopic")
+                // 即使开启批处理，延迟消息也始终作为单独的消息发送。
+                .enableBatching(true)
+                .batchingMaxBytes(512 * 1024)
+                .batchingMaxPublishDelay(50, TimeUnit.MILLISECONDS)
+                .batchingMaxMessages(500)
                 .create();
 
         Snowflake snowflake = new Snowflake();

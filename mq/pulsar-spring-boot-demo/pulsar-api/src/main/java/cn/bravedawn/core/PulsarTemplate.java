@@ -111,6 +111,8 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
                 .value(pulsarMessage)
                 // 事件时间
                 .eventTime(pulsarMessage.getFirstSendTime().getTime())
+                // 支持延时消息
+                .deliverAfter(pulsarMessage.getDelayMills(), TimeUnit.MILLISECONDS)
                 .sequenceId(pulsarMessage.getMessageId())
                 .sendAsync()
                 .thenApply(messageId -> {

@@ -2,7 +2,10 @@ package cn.bravedawn.io.nio.channel;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channel;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 
 /**
  * @author : depers

@@ -20,7 +20,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <pulsar.version>4.0.5</pulsar.version>
+        <pulsar.version>2.10.3</pulsar.version>
     </properties>
 
     <dependencies>
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>org.apache.pulsar</groupId>
             <artifactId>pulsar-client-all</artifactId>
-            <version>4.0.5</version>
+            <version>${pulsar.version}</version>
         </dependency>
 
         <dependency>

@@ -22,14 +22,9 @@ public class RetryConsumerClient {
 
     public static void main(String[] args) throws PulsarClientException {
         PulsarClient client = PulsarClient.builder()
-                .serviceUrl("pulsar://192.168.133.128:6650")
+                .serviceUrl("pulsar://192.168.24.128:6650")
                 // 添加以下配置
                 .build();
-
-        DeadLetterProducerBuilderCustomizer producerBuilderCustomizer = (context, producerBuilder) -> {
-            producerBuilder.enableBatching(true);
-            producerBuilder.enableChunking(false);
-        };
 
         boolean enableEntry = false;
 
@@ -41,7 +36,7 @@ public class RetryConsumerClient {
                 .enableBatchIndexAcknowledgment(true)
                 .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
                 // 开启消息重试
-                .enableRetry(false)
+                .enableRetry(enableEntry)
                 // 构建死信队列策略
                 .deadLetterPolicy(DeadLetterPolicy.builder()
                         // 最大重试投递次数，也就是如果第一次消费失败，还会重新再投递一次
@@ -50,9 +45,6 @@ public class RetryConsumerClient {
                         .deadLetterTopic("persistent://public/siis/partitionedTopic-deadLetter")
                         // 重试主题
                         .retryLetterTopic("persistent://public/siis/partitionedTopic-retryLetter")
-                        // 配置重试信件主题的生产者
-                        .retryLetterProducerBuilderCustomizer(producerBuilderCustomizer)
-                        .deadLetterProducerBuilderCustomizer(producerBuilderCustomizer)
                         .build())
                 .messageListener((consumer1, msg) -> {
                     try {

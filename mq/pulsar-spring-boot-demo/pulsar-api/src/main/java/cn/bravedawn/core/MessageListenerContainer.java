@@ -40,6 +40,8 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
     private List<AbstractBlockingQueueConsumer> blockingQueueConsumers;
     private Map<String, AbstractBlockingQueueConsumer> blockingQueueConsumerMap;
     private Map<String, List<Consumer<PulsarMessage>>> consumersMap;
+    private AbstractDeadLetterBlockingQueueConsumer deadLetterBlockingQueueConsumer;
+    private Consumer<PulsarMessage> deadLetterConsumer;
 
     public MessageListenerContainer(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, List<AbstractBlockingQueueConsumer> blockingQueueConsumers) {
         this.pulsarClientWrapper = pulsarClientWrapper;
@@ -53,82 +55,111 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
         lifecycleLock.lock();
         try {
             if (!isInitialized) {
-                DeadLetterProducerBuilderCustomizer producerBuilderCustomizer = (context, producerBuilder) -> {
-                    producerBuilder.enableBatching(true);
-                    producerBuilder.enableChunking(false);
-                };
-
                 pulsarProperties.getTopics().forEach(topic -> {
                     PulsarProperties.ListenProperties listenConfig = topic.getListenConfig();
                     for (int i = 1; i <= listenConfig.getConsumerNum(); i++) {
-                        try {
-                            Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarClient()
-                                    .newConsumer(JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA))
-                                    .topic(topic.getTopicName())
-                                    .subscriptionType(SubscriptionType.Shared)
-                                    .subscriptionMode(SubscriptionMode.Durable)
-                                    .subscriptionName(topic.getTopicPrefix() + "-subscription")
-                                    .consumerName(topic.getTopicPrefix() + "-listener-" + NetUtil.getLocalhostStr() + "-" + RandomUtil.randomString(4))
-                                    .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-                                    // 开启消息重试
-                                    .enableRetry(listenConfig.isEnableRetry())
-                                    // 构建死信队列策略
-                                    .deadLetterPolicy(DeadLetterPolicy.builder()
-                                            // 最大重试投递次数，也就是如果第一次消费失败，还会重新再投递一次
-                                            .maxRedeliverCount(listenConfig.getMaxRetryCount())
-                                            // 死信主题
-                                            .deadLetterTopic(listenConfig.getRetryLetterTopicName())
-                                            // 重试主题
-                                            .retryLetterTopic(listenConfig.getDeadLetterTopicName())
-                                            // 配置重试信件主题的生产者
-                                            .retryLetterProducerBuilderCustomizer(producerBuilderCustomizer)
-                                            .deadLetterProducerBuilderCustomizer(producerBuilderCustomizer)
-                                            .build())
-                                    .messageListener((consume, msg) -> {
-                                        String msgStr = new String(msg.getData());
-                                        try {
-                                            log.info("收到消息: {}", msgStr );
-                                            blockingQueueConsumerMap.get(topic.getTopicPrefix()).handleConsumer(msg.getValue());
-                                            consume.acknowledge(msg);
-                                        } catch (Throwable e) {
-                                            blockingQueueConsumerMap.get(topic.getTopicPrefix()).exceptionHandle(e);
-                                            if (listenConfig.isEnableRetry()) {
-                                                log.info("消息重试已开启，重试消费该消息。msg={}", msgStr);
-                                                try {
-                                                    consume.reconsumeLater(msg, listenConfig.getRetryDelayTime(), TimeUnit.MILLISECONDS);
-                                                } catch (PulsarClientException ex) {
-                                                    log.error("将消息投递到重试队列异常", ex);
-                                                }
-                                            } else {
-                                                log.info("消息重试已关闭，不再重试消费该消息，确认消费。msg={}", msgStr);
-                                                try {
-                                                    consume.acknowledge(msg);
-                                                } catch (PulsarClientException ex) {
-                                                    log.info("消息重试，确认消息异常", e);
-                                                }
-                                            }
-
-                                        }
-                                    })
-                                    .subscribe();
-                            if (consumersMap.get(topic) == null) {
-                                List<Consumer<PulsarMessage>> consumerList = new ArrayList<>();
-                                consumerList.add(pulsarMessageConsumer);
-                                consumersMap.put(topic.getTopicPrefix(), consumerList);
-                            } else {
-                                consumersMap.get(topic.getTopicPrefix()).add(pulsarMessageConsumer);
-                            }
-                        } catch (PulsarClientException e) {
-                            log.error("创建消费者出现异常，topic={}", topic.getTopicName());
-                            log.error("创建消费者出现异常", e);
-                        }
+                        createConsumer(topic, listenConfig);
                     }
                 });
+
+                createDeadLetterConsumer();
 
                 isInitialized = true;
             }
         } finally {
             lifecycleLock.unlock();
+        }
+    }
+
+
+    private void createConsumer(PulsarProperties.TopicProperties topic, PulsarProperties.ListenProperties listenConfig) {
+        try {
+            Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarClient()
+                    .newConsumer(JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA))
+                    .topic(topic.getTopicName())
+                    .subscriptionType(SubscriptionType.Shared)
+                    .subscriptionMode(SubscriptionMode.Durable)
+                    .subscriptionName(topic.getTopicPrefix() + "-subscription")
+                    .consumerName(topic.getTopicPrefix() + "-listener-" + NetUtil.getLocalhostStr() + "-" + RandomUtil.randomString(4))
+                    .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+                    // 开启消息重试
+                    .enableRetry(listenConfig.isEnableRetry())
+                    // 构建死信队列策略
+                    .deadLetterPolicy(DeadLetterPolicy.builder()
+                            // 最大重试投递次数，也就是如果第一次消费失败，还会重新再投递一次
+                            .maxRedeliverCount(listenConfig.getMaxRetryCount())
+                            // 死信主题
+                            .deadLetterTopic(listenConfig.getRetryLetterTopicName())
+                            // 重试主题
+                            .retryLetterTopic(listenConfig.getDeadLetterTopicName())
+                            .build())
+                    .messageListener((consume, msg) -> {
+                        String msgStr = new String(msg.getData());
+                        try {
+                            log.info("收到消息: {}", msgStr );
+                            blockingQueueConsumerMap.get(topic.getTopicPrefix()).handleConsumer(msg.getValue());
+                            consume.acknowledge(msg);
+                        } catch (Throwable e) {
+                            blockingQueueConsumerMap.get(topic.getTopicPrefix()).exceptionHandle(e);
+                            if (listenConfig.isEnableRetry()) {
+                                log.info("消息重试已开启，重试消费该消息。msg={}", msgStr);
+                                try {
+                                    consume.reconsumeLater(msg, listenConfig.getRetryDelayTime(), TimeUnit.MILLISECONDS);
+                                } catch (PulsarClientException ex) {
+                                    log.error("将消息投递到重试队列异常", ex);
+                                }
+                            } else {
+                                log.info("消息重试已关闭，不再重试消费该消息，确认消费。msg={}", msgStr);
+                                try {
+                                    consume.acknowledge(msg);
+                                } catch (PulsarClientException ex) {
+                                    log.info("消息重试，确认消息异常", e);
+                                }
+                            }
+                        }
+                    })
+                    .subscribe();
+            if (consumersMap.get(topic) == null) {
+                List<Consumer<PulsarMessage>> consumerList = new ArrayList<>();
+                consumerList.add(pulsarMessageConsumer);
+                consumersMap.put(topic.getTopicPrefix(), consumerList);
+            } else {
+                consumersMap.get(topic.getTopicPrefix()).add(pulsarMessageConsumer);
+            }
+        } catch (PulsarClientException e) {
+            log.error("创建消费者出现异常，topic={}", topic.getTopicName());
+            log.error("创建消费者出现异常", e);
+        }
+    }
+    private void createDeadLetterConsumer() {
+        try {
+            // 创建死信队列逻辑
+            Consumer<PulsarMessage> deadLetterConsumer = pulsarClientWrapper.getPulsarClient()
+                    .newConsumer(JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA))
+                    .topicsPattern(deadLetterBlockingQueueConsumer.getTopicPattern())
+                    .subscriptionType(SubscriptionType.Shared)
+                    .subscriptionMode(SubscriptionMode.Durable)
+                    .subscriptionName("dead-letter-subscription")
+                    .consumerName("dead-letter" + "-listener-" + NetUtil.getLocalhostStr() + "-" + RandomUtil.randomString(4))
+                    .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+                    .messageListener((consumer, msg) -> {
+                        String msgStr = new String(msg.getData());
+                        try {
+                            log.info("收到死信消息: {}", msgStr );
+                            deadLetterBlockingQueueConsumer.handleConsumer(msg.getValue());
+                        } catch (Throwable e) {
+                            log.error("处理死信消息异常", e);
+                        } finally {
+                            try {
+                                consumer.acknowledge(msg);
+                            } catch (PulsarClientException e) {
+                                log.error("确认死信消息异常", e);
+                            }
+                        }
+                    })
+                    .subscribe();
+        } catch (Throwable e) {
+            log.error("创建死信消费者异常", e);
         }
     }
 
@@ -145,6 +176,11 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
             log.info("{}主题的消费者已关闭", topic);
         });
 
+        try {
+            deadLetterConsumer.close();
+        } catch (PulsarClientException e){
+            log.error("关闭死信队列消费者异常", e);
+        }
     }
 
     @Override

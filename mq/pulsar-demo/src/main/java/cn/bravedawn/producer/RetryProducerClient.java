@@ -23,7 +23,7 @@ public class RetryProducerClient {
     public static void main(String[] args) throws PulsarClientException, ExecutionException, InterruptedException {
         // 定义客户端
         PulsarClient pulsarClient = PulsarClient.builder()
-                .serviceUrl("pulsar://192.168.133.128:6650")
+                .serviceUrl("pulsar://192.168.24.128:6650")
                 .ioThreads(1)
                 .listenerThreads(1)
                 .build();

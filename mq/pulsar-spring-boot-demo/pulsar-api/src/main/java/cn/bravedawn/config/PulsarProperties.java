@@ -20,6 +20,8 @@ public class PulsarProperties {
 
     private List<TopicProperties> topics;
 
+    private DeadLetterProperties deadLetter;
+
 
     @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class PulsarConfig {
@@ -148,4 +150,14 @@ public class PulsarProperties {
             return retryDelayTime;
         }
     }
+
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
+    public static class DeadLetterProperties {
+        private String topicsPattern;
+
+        public String getTopicsPattern() {
+            return topicsPattern;
+        }
+    }
+
 }

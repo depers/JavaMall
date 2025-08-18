@@ -32,11 +32,9 @@ import java.util.stream.Collectors;
 public class PulsarClientWrapper implements InitializingBean, DisposableBean {
 
     private PulsarProperties pulsarProperties;
-    private ApplicationContextHolder applicationContextHolder;
     private PulsarClient pulsarClient;
 
-    public PulsarClientWrapper(ApplicationContextHolder applicationContextHolder, PulsarProperties pulsarProperties) {
-        this.applicationContextHolder = applicationContextHolder;
+    public PulsarClientWrapper(PulsarProperties pulsarProperties) {
         this.pulsarProperties = pulsarProperties;
     }
 

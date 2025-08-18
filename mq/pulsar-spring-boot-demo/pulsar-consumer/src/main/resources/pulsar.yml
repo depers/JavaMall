@@ -22,3 +22,6 @@ topics:
       consumer-num: 5
       retry-letter-topic-name: persistent://public/siis/retry_sms
       dead-letter-topic-name: persistent://public/siis/dead_sms
+
+dead-letter:
+  topics-pattern: persistent://public/siis/dead_.*

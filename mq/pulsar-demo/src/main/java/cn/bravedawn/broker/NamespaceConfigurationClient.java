@@ -23,7 +23,7 @@ public class NamespaceConfigurationClient{
     public static void main(String[] args) throws PulsarClientException, PulsarAdminException {
 
         PulsarAdmin admin = PulsarAdmin.builder()
-                .serviceHttpUrl("http://192.168.133.128:8080")
+                .serviceHttpUrl("http://192.168.24.128:8080")
                 .build();
 
         try {
@@ -35,16 +35,15 @@ public class NamespaceConfigurationClient{
                 admin.namespaces().createNamespace("public/siis");
             }
 
-            Boolean deduplicationStatus = admin.namespaces().getDeduplicationStatus("public/siis");
-            if (deduplicationStatus == null) {
-                log.info("开启命名空间的重复数据删除配置");
-                admin.namespaces().setDeduplicationStatus("public/siis", true);
-            } else {
-                log.info("获取命名空间的重复删除数据配置：{}", deduplicationStatus);
-            }
+//            Boolean deduplicationStatus = admin.namespaces().getDeduplicationStatus("public/siis");
+//            if (deduplicationStatus == null) {
+//                log.info("开启命名空间的重复数据删除配置");
+//                admin.namespaces().setDeduplicationStatus("public/siis", true);
+//            } else {
+//                log.info("获取命名空间的重复删除数据配置：{}", deduplicationStatus);
+//            }
 
-            RetentionPolicies retention = admin.namespaces().getRetention("public/siis");
-            log.info("该命名空间下每个主题的保留策略：{}", retention);
+
 
             Map<BacklogQuota.BacklogQuotaType, BacklogQuota> backlogQuotaMap = admin.namespaces().getBacklogQuotaMap("public/siis");
             log.info("该命名空间下的积压配额：{}", backlogQuotaMap);
@@ -62,5 +61,17 @@ public class NamespaceConfigurationClient{
 
 
 
+    }
+
+
+    private void getRetention(PulsarAdmin admin) throws PulsarAdminException {
+        RetentionPolicies retention = admin.namespaces().getRetention("public/siis");
+        log.info("该命名空间下每个主题的保留策略：{}", retention);
+
+        if (retention == null) {
+            // 示例：设置保留策略（保留6小时或1GB数据）
+            RetentionPolicies ret = new RetentionPolicies(60, 1024);
+            admin.namespaces().setRetention("public/siis", ret);
+        }
     }
 }

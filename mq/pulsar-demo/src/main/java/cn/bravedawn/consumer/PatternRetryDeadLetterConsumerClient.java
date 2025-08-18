@@ -5,15 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.*;
 import org.apache.pulsar.client.impl.schema.JSONSchema;
 
-/**
- * @Description : TODO
- * @Author : depers
- * @Project : pulsar-demo
- * @Date : Created in 2025-07-16 17:51
- */
+import java.util.regex.Pattern;
 
 @Slf4j
-public class RetryDeadLetterConsumerClient {
+public class PatternRetryDeadLetterConsumerClient {
+
 
     public static void main(String[] args) throws PulsarClientException {
         PulsarClient client = PulsarClient.builder()
@@ -22,7 +18,7 @@ public class RetryDeadLetterConsumerClient {
                 .build();
 
         Consumer<DemoData> consumer = client.newConsumer(JSONSchema.of(DemoData.class))
-                .topic("persistent://public/siis/partitionedTopic-deadLetter")
+                .topicsPattern(Pattern.compile("persistent://public/siis/partitionedTopic-.*"))
                 .subscriptionName("my-subscription")
                 .subscriptionType(SubscriptionType.Shared)
                 .subscriptionMode(SubscriptionMode.Durable)

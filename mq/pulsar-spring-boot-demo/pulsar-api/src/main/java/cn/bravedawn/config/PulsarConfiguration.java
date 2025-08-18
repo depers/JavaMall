@@ -4,21 +4,16 @@ import cn.bravedawn.core.AbstractBlockingQueueConsumer;
 import cn.bravedawn.core.MessageListenerContainer;
 import cn.bravedawn.core.PulsarClientWrapper;
 import cn.bravedawn.core.PulsarTemplate;
-import cn.bravedawn.dao.MqRecordMapper;
 import cn.bravedawn.toolkit.ApplicationContextHolder;
 import cn.bravedawn.toolkit.YamlUtil;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pulsar.shade.com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
 import java.util.List;
 
@@ -46,8 +41,9 @@ public class PulsarConfiguration {
     }
 
     @Bean
-    public PulsarClientWrapper pulsarClientWrapper(ApplicationContextHolder applicationContextHolder, PulsarProperties pulsarProperties)  {
-        return new PulsarClientWrapper(applicationContextHolder, pulsarProperties);
+    @DependsOn("applicationContextHolder")
+    public PulsarClientWrapper pulsarClientWrapper(PulsarProperties pulsarProperties)  {
+        return new PulsarClientWrapper(pulsarProperties);
     }
 
     @Bean

@@ -62,6 +62,13 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
                     }
                 });
 
+                pulsarProperties.getPriorityQueue().forEach(topic -> {
+                    PulsarProperties.ListenProperties listenConfig = topic.getListenConfig();
+                    for (int i = 1; i <= listenConfig.getConsumerNum(); i++) {
+                        createConsumer(topic, listenConfig);
+                    }
+                });
+
                 createDeadLetterConsumer();
 
                 isInitialized = true;
@@ -72,15 +79,19 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
     }
 
 
-    private void createConsumer(PulsarProperties.TopicProperties topic, PulsarProperties.ListenProperties listenConfig) {
+    private void createConsumer(String topicPrefix, String topicName, PulsarProperties.ListenProperties listenConfig, boolean isPriority) {
         try {
+            String originTopicPrefix = topicPrefix;
+            if (isPriority) {
+                topicPrefix = topicPrefix + "priority";
+            }
             Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarClient()
                     .newConsumer(JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA))
-                    .topic(topic.getTopicName())
+                    .topic(topicName)
                     .subscriptionType(SubscriptionType.Shared)
                     .subscriptionMode(SubscriptionMode.Durable)
-                    .subscriptionName(topic.getTopicPrefix() + "-subscription")
-                    .consumerName(topic.getTopicPrefix() + "-listener-" + NetUtil.getLocalhostStr() + "-" + RandomUtil.randomString(4))
+                    .subscriptionName(topicPrefix + "-subscription")
+                    .consumerName(topicPrefix + "-listener-" + NetUtil.getLocalhostStr() + "-" + RandomUtil.randomString(4))
                     .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
                     // 开启消息重试
                     .enableRetry(listenConfig.isEnableRetry())
@@ -97,10 +108,10 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
                         String msgStr = new String(msg.getData());
                         try {
                             log.info("收到消息: {}", msgStr );
-                            blockingQueueConsumerMap.get(topic.getTopicPrefix()).handleConsumer(msg.getValue());
+                            blockingQueueConsumerMap.get(originTopicPrefix).handleConsumer(msg.getValue());
                             consume.acknowledge(msg);
                         } catch (Throwable e) {
-                            blockingQueueConsumerMap.get(topic.getTopicPrefix()).exceptionHandle(e);
+                            blockingQueueConsumerMap.get(originTopicPrefix).exceptionHandle(e);
                             if (listenConfig.isEnableRetry()) {
                                 log.info("消息重试已开启，重试消费该消息。msg={}", msgStr);
                                 try {
@@ -119,15 +130,15 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
                         }
                     })
                     .subscribe();
-            if (consumersMap.get(topic) == null) {
+            if (consumersMap.get(topicPrefix) == null) {
                 List<Consumer<PulsarMessage>> consumerList = new ArrayList<>();
                 consumerList.add(pulsarMessageConsumer);
-                consumersMap.put(topic.getTopicPrefix(), consumerList);
+                consumersMap.put(topicPrefix, consumerList);
             } else {
-                consumersMap.get(topic.getTopicPrefix()).add(pulsarMessageConsumer);
+                consumersMap.get(topicPrefix).add(pulsarMessageConsumer);
             }
         } catch (PulsarClientException e) {
-            log.error("创建消费者出现异常，topic={}", topic.getTopicName());
+            log.error("创建消费者出现异常，topic={}", topicName);
             log.error("创建消费者出现异常", e);
         }
     }
@@ -173,7 +184,7 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
                     log.error("关闭pulsar消费者异常", e);
                 }
             });
-            log.info("{}主题的消费者已关闭", topic);
+            log.info("{}主题前缀的消费者已关闭", topic);
         });
 
         try {

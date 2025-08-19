@@ -3,6 +3,7 @@ package cn.bravedawn.core;
 import cn.bravedawn.config.PulsarProperties;
 import cn.bravedawn.contant.Constant;
 import cn.bravedawn.contant.MessageStatus;
+import cn.bravedawn.contant.PriorityEnum;
 import cn.bravedawn.contant.SchemaDefinitionConfig;
 import cn.bravedawn.dao.MqRecordMapper;
 import cn.bravedawn.interceptor.SendSuccessInterceptor;
@@ -129,8 +130,15 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
         }
 
 
+        // 选择生产者
+        Producer<PulsarMessage> pulsarMessageProducer = producerMap.get(pulsarMessage.getTopicPrefix());
+        if (pulsarMessage.getPriorityEnum() == PriorityEnum.HIGH) {
+            pulsarMessageProducer = priorityProducerMap.get(pulsarMessage.getTopicPrefix());
+        }
+
+
         if (pulsarMessage.getDelayMills() == null) {
-            producerMap.get(pulsarMessage.getTopicPrefix())
+            pulsarMessageProducer
                     .newMessage()
                     .value(pulsarMessage)
                     // 事件时间
@@ -153,7 +161,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
         } else {
             // 这里的86400000是消息的broker中设置的未确认消息的有效时间，如果延迟时间大于该时间，有效时间到达后消息就会被清除
             Preconditions.checkArgument(pulsarMessage.getDelayMills() > 0 && pulsarMessage.getDelayMills() < 86400000, "延迟消息的延迟时间必须大于0且小于86400000");
-            producerMap.get(pulsarMessage.getTopicPrefix())
+            pulsarMessageProducer
                     .newMessage()
                     .value(pulsarMessage)
                     // 事件时间

@@ -58,14 +58,14 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
                 pulsarProperties.getTopics().forEach(topic -> {
                     PulsarProperties.ListenProperties listenConfig = topic.getListenConfig();
                     for (int i = 1; i <= listenConfig.getConsumerNum(); i++) {
-                        createConsumer(topic, listenConfig);
+                        createConsumer(topic.getTopicPrefix(), topic.getTopicName(), listenConfig, false);
                     }
                 });
 
                 pulsarProperties.getPriorityQueue().forEach(topic -> {
                     PulsarProperties.ListenProperties listenConfig = topic.getListenConfig();
                     for (int i = 1; i <= listenConfig.getConsumerNum(); i++) {
-                        createConsumer(topic, listenConfig);
+                        createConsumer(topic.getTopicPrefix(), topic.getTopicName(), listenConfig, true);
                     }
                 });
 

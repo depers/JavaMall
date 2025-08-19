@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -83,21 +84,48 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
                 .serviceHttpUrl(pulsarConfig.getServiceHttpUrl())
                 .build()) {
 
+            // 解析topics配置
             List<String> topicList = admin.topics().getList(pulsarConfig.getNamespace());
             List<String> simplifyList  = topicList.stream()
                     .filter(item -> item.contains("partition-"))
                     .map(item -> item.substring(0, item.indexOf("partition-")-1)).distinct().collect(Collectors.toList());
-            List<PulsarProperties.TopicProperties> existTopics = pulsarProperties.getTopics().stream().filter(item -> simplifyList.contains(item.getTopicName())).collect(Collectors.toList());
-            List<PulsarProperties.TopicProperties> noExistTopics = pulsarProperties.getTopics().stream().filter(item -> !simplifyList.contains(item.getTopicName())).collect(Collectors.toList());
+            Map<String, Integer> existTopics = pulsarProperties.getTopics()
+                    .stream().filter(item -> simplifyList.contains(item.getTopicName()))
+                    .collect(Collectors.toMap(PulsarProperties.TopicProperties::getTopicName, PulsarProperties.TopicProperties::getPartitionNum,
+                            (oldValue, newValue) -> oldValue));
+
+            Map<String, Integer> noExistTopics = pulsarProperties.getTopics()
+                    .stream().filter(item -> !simplifyList.contains(item.getTopicName()))
+                    .collect(Collectors.toMap(PulsarProperties.TopicProperties::getTopicName, PulsarProperties.TopicProperties::getPartitionNum,
+                            (oldValue, newValue) -> oldValue));
+
+            // 解析priority-queue配置
+            List<String> prefixList = pulsarProperties.getTopics().stream()
+                    .filter(PulsarProperties.TopicProperties::isPriorityEnable)
+                    .map(PulsarProperties.TopicProperties::getTopicPrefix).collect(Collectors.toList());
+
+            Map<String, Integer> priorityQueue = pulsarProperties.getPriorityQueue().stream()
+                    .filter(item -> prefixList.contains(item.getTopicPrefix()))
+                    .collect(Collectors.toMap(PulsarProperties.PriorityQueue::getTopicName, PulsarProperties.PriorityQueue::getPartitionNum,
+                            (oldValue, newValue) -> oldValue));
+            priorityQueue.entrySet().stream().forEach(item -> {
+                if (simplifyList.contains(item.getKey())) {
+                    existTopics.put(item.getKey(), item.getValue());
+                } else {
+                    noExistTopics.put(item.getKey(), item.getValue());
+                }
+            });
+
+
             if (!existTopics.isEmpty()) {
-                log.info("已经创建，无需重新创建的Topic有：{}", existTopics.stream().map(PulsarProperties.TopicProperties::getTopicName).collect(Collectors.toList()));
+                log.info("已经创建，无需重新创建的Topic有：{}", existTopics.keySet());
             }
             if (!noExistTopics.isEmpty()) {
-                log.info("没有创建，需要重新创建的Topic有：{}", noExistTopics.stream().map(PulsarProperties.TopicProperties::getTopicName).collect(Collectors.toList()));
-                noExistTopics.forEach(item -> {
+                log.info("没有创建，需要重新创建的Topic有：{}", noExistTopics.keySet());
+                noExistTopics.forEach((key, value) -> {
                     try {
-                        admin.topics().createPartitionedTopic(item.getTopicName(), item.getPartitionNum());
-                        log.info("Topic创建成功，TopicName={}, TopicPrefix={}, partition={}", item.getTopicName(), item.getTopicPrefix(), item.getPartitionNum());
+                        admin.topics().createPartitionedTopic(key, value);
+                        log.info("Topic创建成功，TopicName={}, partition={}", key, value);
                     } catch (PulsarAdminException e) {
                         log.error("创建Topic出现异常", e);
                     }

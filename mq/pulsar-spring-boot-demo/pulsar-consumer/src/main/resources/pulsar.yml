@@ -16,12 +16,24 @@ topics:
   - topic-prefix: sms
     topic-name: persistent://public/siis/sms
     partition-num: 3
+    priority-enable: true
     listen-config:
       enable-retry: true
       max-retry-count: 3
       consumer-num: 5
       retry-letter-topic-name: persistent://public/siis/retry_sms
       dead-letter-topic-name: persistent://public/siis/dead_sms
+
+priority-queue:
+  - topic-prefix: sms
+    topic-name: persistent://public/siis/sms_priority
+    partition-num: 3
+    listen-config:
+      enable-retry: true
+      max-retry-count: 3
+      consumer-num: 5
+      retry-letter-topic-name: persistent://public/siis/retry_sms_priority
+      dead-letter-topic-name: persistent://public/siis/dead_sms_priority
 
 dead-letter:
   topics-pattern: persistent://public/siis/dead_.*

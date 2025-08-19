@@ -44,6 +44,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
     private final PulsarClientWrapper pulsarClientWrapper;
     private final PulsarProperties pulsarProperties;
     private final Map<String, Producer<PulsarMessage>> producerMap = new HashMap<>();
+    private final Map<String, Producer<PulsarMessage>> priorityProducerMap = new HashMap<>();
 
     public PulsarTemplate(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties) {
         this.pulsarClientWrapper = pulsarClientWrapper;
@@ -62,6 +63,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
     public void afterPropertiesSet() throws Exception {
         // 定义模式
         JSONSchema<PulsarMessage> jsonSchema = JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA);
+        // 创建普通生产者
         for (PulsarProperties.TopicProperties topic : pulsarProperties.getTopics()) {
             Producer<PulsarMessage> producer = pulsarClientWrapper.getPulsarClient()
                     .newProducer(jsonSchema)
@@ -78,6 +80,25 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
                     .intercept(new SendSuccessInterceptor())
                     .create();
             producerMap.put(topic.getTopicPrefix(), producer);
+        }
+
+        // 创建优先级生产者
+        for (PulsarProperties.PriorityQueue priorityQueue : pulsarProperties.getPriorityQueue()) {
+            Producer<PulsarMessage> producer = pulsarClientWrapper.getPulsarClient()
+                    .newProducer(jsonSchema)
+                    .producerName(priorityQueue.getTopicPrefix() + "-pri-producer-" + NetUtil.getLocalhostStr() + "-" + RandomUtil.randomString(4))
+                    // 访问模式
+                    .accessMode(ProducerAccessMode.Shared)
+                    // 路由模式
+                    .messageRoutingMode(MessageRoutingMode.RoundRobinPartition)
+                    .topic(priorityQueue.getTopicName())
+                    .enableBatching(true)
+                    .batchingMaxBytes(512 * 1024)
+                    .batchingMaxPublishDelay(50, TimeUnit.MILLISECONDS)
+                    .batchingMaxMessages(500)
+                    .intercept(new SendSuccessInterceptor())
+                    .create();
+            priorityProducerMap.put(priorityQueue.getTopicPrefix(), producer);
         }
     }
 

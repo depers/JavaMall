@@ -22,7 +22,10 @@ public class PulsarProperties {
 
     private DeadLetterProperties deadLetter;
 
+    private List<PriorityQueue> priorityQueue;
 
+
+    @Data
     @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class PulsarConfig {
         private String serviceUrl;
@@ -30,93 +33,36 @@ public class PulsarProperties {
         private String namespace;
         private ProducerConfig producer;
         private ConsumerConfig consumer;
-
-        public String getServiceUrl() {
-            return serviceUrl;
-        }
-
-        public String getNamespace() {
-            return namespace;
-        }
-
-        public ProducerConfig getProducer() {
-            return producer;
-        }
-
-        public ConsumerConfig getConsumer() {
-            return consumer;
-        }
-
-        public String getServiceHttpUrl() {
-            return serviceHttpUrl;
-        }
     }
 
+    @Data
     @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class ProducerConfig {
         private int ioThreads;
         private int listenerThreads;
         private int sendTimeout;
         private int sendMaxRetryCount;
-
-
-        public int getSendTimeout() {
-            return sendTimeout;
-        }
-
-        public int getSendMaxRetryCount() {
-            return sendMaxRetryCount;
-        }
-
-        public int getIoThreads() {
-            return ioThreads;
-        }
-
-        public int getListenerThreads() {
-            return listenerThreads;
-        }
     }
 
+    @Data
     @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class ConsumerConfig {
         private int ioThreads;
         private int listenerThreads;
-
-        public int getIoThreads() {
-            return ioThreads;
-        }
-
-        public int getListenerThreads() {
-            return listenerThreads;
-        }
     }
 
 
+    @Data
     @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class TopicProperties {
-
         private String topicName;
         private String topicPrefix;
         private int partitionNum;
         private ListenProperties listenConfig;
-
-        public String getTopicName() {
-            return topicName;
-        }
-
-        public String getTopicPrefix() {
-            return topicPrefix;
-        }
-
-        public ListenProperties getListenConfig() {
-            return listenConfig;
-        }
-
-        public int getPartitionNum() {
-            return partitionNum;
-        }
+        private boolean priorityEnable;
     }
 
+    @Data
     @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class ListenProperties {
         private boolean enableRetry;
@@ -125,32 +71,9 @@ public class PulsarProperties {
         private int consumerNum;
         private String retryLetterTopicName;
         private String deadLetterTopicName;
-
-        public String getRetryLetterTopicName() {
-            return retryLetterTopicName;
-        }
-
-        public String getDeadLetterTopicName() {
-            return deadLetterTopicName;
-        }
-
-        public int getMaxRetryCount() {
-            return maxRetryCount;
-        }
-
-        public int getConsumerNum() {
-            return consumerNum;
-        }
-
-        public boolean isEnableRetry() {
-            return enableRetry;
-        }
-
-        public int getRetryDelayTime() {
-            return retryDelayTime;
-        }
     }
 
+    @Data
     @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class DeadLetterProperties {
         private String topicsPattern;
@@ -158,6 +81,16 @@ public class PulsarProperties {
         public String getTopicsPattern() {
             return topicsPattern;
         }
+    }
+
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
+    @Data
+    public static class PriorityQueue {
+        private String topicName;
+        private String topicPrefix;
+        private int partitionNum;
+        private ListenProperties listenConfig;
+
     }
 
 }

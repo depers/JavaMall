@@ -1,0 +1,11 @@
+canal:
+  host: 192.168.24.128
+  port: 11111
+  username: canal
+  password: canal
+  topic: example
+  batchSize: 10
+  enable: true
+
+rocketmq:
+  name-server: 192.168.3.13:9876

@@ -1,6 +1,6 @@
 pulsar-config:
-  service-url: pulsar://192.168.133.128:6650
-  service-http-url: http://192.168.133.128:8080
+  service-url: pulsar://192.168.24.128:6650
+  service-http-url: http://192.168.24.128:8080
   namespace: public/siis
   producer:
     io-threads: 1

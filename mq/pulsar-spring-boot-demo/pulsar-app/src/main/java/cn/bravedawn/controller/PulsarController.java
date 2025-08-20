@@ -41,4 +41,23 @@ public class PulsarController {
         return "success";
     }
 
+
+
+    @GetMapping("/sendPriorityMsg")
+    public String sendPriorityMsg() {
+        PulsarMessage pulsarMessage = new PulsarMessage();
+        pulsarMessage.setTopicPrefix("sms");
+        Map<String, Object> properties = new HashMap<>();
+        UserDTO userDTO = new UserDTO();
+        userDTO.setName("tom");
+        userDTO.setAge(19);
+        userDTO.setBrithday(new Date());
+        properties.put("user", userDTO);
+        pulsarMessage.setProperties(properties);
+        pulsarMessage.setPriorityEnum(PriorityEnum.HIGH);
+
+        pulsarTemplate.sendMessage(pulsarMessage);
+        return "success";
+    }
+
 }

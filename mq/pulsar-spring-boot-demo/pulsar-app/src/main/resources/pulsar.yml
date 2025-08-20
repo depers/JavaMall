@@ -1,6 +1,6 @@
 pulsar-config:
-  service-url: pulsar://192.168.133.128:6650
-  service-http-url: http://192.168.133.128:8080
+  service-url: pulsar://192.168.24.128:6650
+  service-http-url: http://192.168.24.128:8080
   namespace: public/siis
   producer:
     io-threads: 1
@@ -16,10 +16,26 @@ topics:
   - topic-prefix: sms
     topic-name: persistent://public/siis/sms
     partition-num: 3
+    priority-enable: true
     listen-config:
       enable-retry: true
       max-retry-count: 3
-      retry-delay-time: 10000
-      consumer-num: 3
+      consumer-num: 5
       retry-letter-topic-name: persistent://public/siis/retry_sms
       dead-letter-topic-name: persistent://public/siis/dead_sms
+
+
+priority-queue:
+  - topic-prefix: sms
+    topic-name: persistent://public/siis/sms_priority
+    partition-num: 3
+    listen-config:
+      enable-retry: true
+      max-retry-count: 3
+      consumer-num: 5
+      retry-letter-topic-name: persistent://public/siis/retry_sms_priority
+      dead-letter-topic-name: persistent://public/siis/dead_sms_priority
+
+
+dead-letter:
+  topics-pattern: persistent://public/siis/dead_.*

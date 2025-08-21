@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PulsarClientWrapper implements InitializingBean, DisposableBean {
 
-    private PulsarProperties pulsarProperties;
+    private final PulsarProperties pulsarProperties;
     private PulsarClient pulsarClient;
 
     public PulsarClientWrapper(PulsarProperties pulsarProperties) {

@@ -36,12 +36,12 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
 
     private volatile boolean isInitialized = false;
     protected final Lock lifecycleLock = new ReentrantLock();
-    private PulsarProperties pulsarProperties;
-    private PulsarClientWrapper pulsarClientWrapper;
-    private List<AbstractBlockingQueueConsumer> blockingQueueConsumers;
-    private Map<String, AbstractBlockingQueueConsumer> blockingQueueConsumerMap;
-    private Map<String, List<Consumer<PulsarMessage>>> consumersMap;
-    private AbstractDeadLetterBlockingQueueConsumer deadLetterBlockingQueueConsumer;
+    private final PulsarProperties pulsarProperties;
+    private final PulsarClientWrapper pulsarClientWrapper;
+    private final List<AbstractBlockingQueueConsumer> blockingQueueConsumers;
+    private final Map<String, AbstractBlockingQueueConsumer> blockingQueueConsumerMap;
+    private final Map<String, List<Consumer<PulsarMessage>>> consumersMap;
+    private final AbstractDeadLetterBlockingQueueConsumer deadLetterBlockingQueueConsumer;
     private Consumer<PulsarMessage> deadLetterConsumer;
     private final ConsumeIdempotentInterceptor consumeIdempotentInterceptor = new ConsumeIdempotentInterceptor();
 
@@ -160,7 +160,7 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
     private void createDeadLetterConsumer() {
         try {
             // 创建死信队列逻辑
-            Consumer<PulsarMessage> deadLetterConsumer = pulsarClientWrapper.getPulsarClient()
+            deadLetterConsumer = pulsarClientWrapper.getPulsarClient()
                     .newConsumer(JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA))
                     .topicsPattern(deadLetterBlockingQueueConsumer.getTopicPattern())
                     .subscriptionType(SubscriptionType.Shared)

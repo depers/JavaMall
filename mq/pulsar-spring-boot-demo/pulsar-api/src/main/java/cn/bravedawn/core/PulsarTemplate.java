@@ -59,6 +59,11 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
             entry.getValue().close();
             log.info("{}主题的生产者已关闭", entry.getKey());
         }
+
+        for (Map.Entry<String, Producer<PulsarMessage>> entry : priorityProducerMap.entrySet()) {
+            entry.getValue().close();
+            log.info("{}主题的生产者已关闭", entry.getKey());
+        }
     }
 
     @Override

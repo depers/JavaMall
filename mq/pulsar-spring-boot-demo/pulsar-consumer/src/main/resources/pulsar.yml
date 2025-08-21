@@ -19,7 +19,7 @@ topics:
     priority-enable: true
     listen-config:
       enable-retry: true
-      max-retry-count: 3
+      max-retry-count: 2
       consumer-num: 5
       retry-letter-topic-name: persistent://public/siis/retry_sms
       dead-letter-topic-name: persistent://public/siis/dead_sms
@@ -30,7 +30,7 @@ priority-queue:
     partition-num: 3
     listen-config:
       enable-retry: true
-      max-retry-count: 3
+      max-retry-count: 1
       consumer-num: 5
       retry-letter-topic-name: persistent://public/siis/retry_sms_priority
       dead-letter-topic-name: persistent://public/siis/dead_sms_priority

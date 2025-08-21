@@ -20,7 +20,7 @@ public class BrokerConfigurationClient {
 
     public static void main(String[] args) throws PulsarClientException, PulsarAdminException {
         PulsarAdmin admin = PulsarAdmin.builder()
-                .serviceHttpUrl("http://192.168.133.128:8080")
+                .serviceHttpUrl("http://192.168.24.128:8080")
                 .build();
 
         List<String> dynamicConfigurationNames = admin.brokers().getDynamicConfigurationNames();
@@ -54,6 +54,10 @@ public class BrokerConfigurationClient {
 
         String delayedDeliveryEnabled = admin.brokers().getRuntimeConfigurations().get("delayedDeliveryEnabled");
         log.info("delayedDeliveryEnabled: {}", delayedDeliveryEnabled);
+
+        String brokerSubscriptionPatternEvaluationEnabled = admin.brokers().getRuntimeConfigurations().get("brokerSubscriptionPatternEvaluationEnabled");
+        log.info("brokerSubscriptionPatternEvaluationEnabled: {}", brokerSubscriptionPatternEvaluationEnabled);
+
         admin.close();
     }
 }

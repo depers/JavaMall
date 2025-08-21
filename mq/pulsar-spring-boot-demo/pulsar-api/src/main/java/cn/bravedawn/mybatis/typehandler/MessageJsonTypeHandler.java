@@ -1,7 +1,7 @@
 package cn.bravedawn.mybatis.typehandler;
 
 import cn.bravedawn.core.PulsarMessage;
-import cn.hutool.json.JSONUtil;
+import cn.bravedawn.toolkit.JsonUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
@@ -30,7 +30,7 @@ public class MessageJsonTypeHandler extends BaseTypeHandler<PulsarMessage> {
      */
     @Override
     public void setNonNullParameter(PreparedStatement preparedStatement, int i, PulsarMessage pulsarMessage, JdbcType jdbcType) throws SQLException {
-        preparedStatement.setString(i, JSONUtil.toJsonStr(pulsarMessage));
+        preparedStatement.setString(i, JsonUtil.toJson(pulsarMessage));
     }
 
     /**
@@ -44,7 +44,7 @@ public class MessageJsonTypeHandler extends BaseTypeHandler<PulsarMessage> {
     public PulsarMessage getNullableResult(ResultSet resultSet, String columnName) throws SQLException {
         String value = resultSet.getString(columnName);
         if (StringUtils.isNotBlank(value)) {
-            return JSONUtil.toBean(value, PulsarMessage.class);
+            return JsonUtil.toObj(value, PulsarMessage.class);
         }
         return null;
     }
@@ -61,7 +61,7 @@ public class MessageJsonTypeHandler extends BaseTypeHandler<PulsarMessage> {
     public PulsarMessage getNullableResult(ResultSet resultSet, int columnIndex) throws SQLException {
         String value = resultSet.getString(columnIndex);
         if (StringUtils.isNotBlank(value)) {
-            return JSONUtil.toBean(value, PulsarMessage.class);
+            return JsonUtil.toObj(value, PulsarMessage.class);
         }
         return null;
     }
@@ -78,7 +78,7 @@ public class MessageJsonTypeHandler extends BaseTypeHandler<PulsarMessage> {
     public PulsarMessage getNullableResult(CallableStatement callableStatement, int columnIndex) throws SQLException {
         String value = callableStatement.getString(columnIndex);
         if (StringUtils.isNotBlank(value)) {
-            return JSONUtil.toBean(value, PulsarMessage.class);
+            return JsonUtil.toObj(value, PulsarMessage.class);
         }
         return null;
     }

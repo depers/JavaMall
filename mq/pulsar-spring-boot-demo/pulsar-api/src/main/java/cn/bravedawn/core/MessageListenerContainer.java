@@ -43,12 +43,14 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
     private AbstractDeadLetterBlockingQueueConsumer deadLetterBlockingQueueConsumer;
     private Consumer<PulsarMessage> deadLetterConsumer;
 
-    public MessageListenerContainer(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, List<AbstractBlockingQueueConsumer> blockingQueueConsumers) {
+    public MessageListenerContainer(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties,
+                                    List<AbstractBlockingQueueConsumer> blockingQueueConsumers, AbstractDeadLetterBlockingQueueConsumer deadLetterBlockingQueueConsumer) {
         this.pulsarClientWrapper = pulsarClientWrapper;
         this.pulsarProperties = pulsarProperties;
         this.blockingQueueConsumers = blockingQueueConsumers;
         this.blockingQueueConsumerMap = blockingQueueConsumers.stream().collect(Collectors.toMap(AbstractBlockingQueueConsumer::getTopicPrefix, Function.identity()));
         this.consumersMap = new HashMap<>();
+        this.deadLetterBlockingQueueConsumer = deadLetterBlockingQueueConsumer;
     }
 
     public void start() {
@@ -83,7 +85,7 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
         try {
             String originTopicPrefix = topicPrefix;
             if (isPriority) {
-                topicPrefix = topicPrefix + "priority";
+                topicPrefix = topicPrefix + "-priority";
             }
             Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarClient()
                     .newConsumer(JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA))
@@ -100,20 +102,30 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
                             // 最大重试投递次数，也就是如果第一次消费失败，还会重新再投递一次
                             .maxRedeliverCount(listenConfig.getMaxRetryCount())
                             // 死信主题
-                            .deadLetterTopic(listenConfig.getRetryLetterTopicName())
+                            .deadLetterTopic(listenConfig.getDeadLetterTopicName())
                             // 重试主题
-                            .retryLetterTopic(listenConfig.getDeadLetterTopicName())
+                            .retryLetterTopic(listenConfig.getRetryLetterTopicName())
                             .build())
                     .messageListener((consume, msg) -> {
                         String msgStr = new String(msg.getData());
                         try {
-                            log.info("收到消息: {}", msgStr );
+                            int retryCount = 1;
+                            if (msg.getProperties().get("RECONSUMETIMES") != null) {
+                                retryCount = Integer.parseInt(msg.getProperties().get("RECONSUMETIMES")) + 1;
+                            }
+
+                            log.info("第{}次，收到消息: {}", retryCount, msgStr);
                             blockingQueueConsumerMap.get(originTopicPrefix).handleConsumer(msg.getValue());
                             consume.acknowledge(msg);
                         } catch (Throwable e) {
                             blockingQueueConsumerMap.get(originTopicPrefix).exceptionHandle(e);
                             if (listenConfig.isEnableRetry()) {
-                                log.info("消息重试已开启，重试消费该消息。msg={}", msgStr);
+
+                                // 获取属性，这个属性map是不可修改的，如果要添加自己的属性，需要新建一个map放到参数里面，pulsar会将该map拼接到properties
+                                Map<String, String> properties = msg.getProperties();
+                                log.info("消息的属性：{}", properties);
+
+                                log.info("消息重试已开启，开始重试消费该消息。msg={}", msgStr);
                                 try {
                                     consume.reconsumeLater(msg, listenConfig.getRetryDelayTime(), TimeUnit.MILLISECONDS);
                                 } catch (PulsarClientException ex) {

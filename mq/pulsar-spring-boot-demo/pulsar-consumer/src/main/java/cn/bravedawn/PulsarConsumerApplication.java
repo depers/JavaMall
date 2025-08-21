@@ -1,5 +1,6 @@
 package cn.bravedawn;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,6 +14,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  */
 
 @SpringBootApplication(scanBasePackages = "cn.bravedawn")
+@MapperScan("cn.bravedawn.dao")
 public class PulsarConsumerApplication {
 
 

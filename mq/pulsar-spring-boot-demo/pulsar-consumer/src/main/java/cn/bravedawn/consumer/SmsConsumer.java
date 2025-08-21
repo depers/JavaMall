@@ -24,6 +24,7 @@ public class SmsConsumer implements AbstractBlockingQueueConsumer {
     @Override
     public void handleConsumer(PulsarMessage pulsarMessage) {
         log.info("消费者收到了信息：{}", pulsarMessage);
+        int i = 1 / 0;
     }
 
     @Override

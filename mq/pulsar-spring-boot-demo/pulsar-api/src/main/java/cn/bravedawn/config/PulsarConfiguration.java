@@ -1,9 +1,6 @@
 package cn.bravedawn.config;
 
-import cn.bravedawn.core.AbstractBlockingQueueConsumer;
-import cn.bravedawn.core.MessageListenerContainer;
-import cn.bravedawn.core.PulsarClientWrapper;
-import cn.bravedawn.core.PulsarTemplate;
+import cn.bravedawn.core.*;
 import cn.bravedawn.toolkit.ApplicationContextHolder;
 import cn.bravedawn.toolkit.YamlUtil;
 import com.google.common.base.Preconditions;
@@ -55,8 +52,9 @@ public class PulsarConfiguration {
 
     @Bean
     @ConditionalOnBean(AbstractBlockingQueueConsumer.class)
-    public MessageListenerContainer messageListenerContainer(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties, List<AbstractBlockingQueueConsumer> blockingQueueConsumerList) {
-        return new MessageListenerContainer(pulsarClientWrapper, pulsarProperties, blockingQueueConsumerList);
+    public MessageListenerContainer messageListenerContainer(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties,
+                                                             List<AbstractBlockingQueueConsumer> blockingQueueConsumerList, AbstractDeadLetterBlockingQueueConsumer deadLetterBlockingQueueConsumer) {
+        return new MessageListenerContainer(pulsarClientWrapper, pulsarProperties, blockingQueueConsumerList, deadLetterBlockingQueueConsumer);
     }
 
 

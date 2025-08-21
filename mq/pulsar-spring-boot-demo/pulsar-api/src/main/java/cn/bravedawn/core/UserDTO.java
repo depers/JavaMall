@@ -1,4 +1,4 @@
-package cn.bravedawn.controller;
+package cn.bravedawn.core;
 
 import lombok.Data;
 

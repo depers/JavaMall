@@ -1,6 +1,7 @@
 package cn.bravedawn.dao;
 
 import cn.bravedawn.PulsarApplication;
+import cn.bravedawn.contant.MessageStatus;
 import cn.bravedawn.core.MqRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +31,7 @@ public class MqRecordMapperTest {
     public void testUpdateById() {
         MqRecord record = new MqRecord();
         record.setId(1948215349376315392L);
-        record.setStatus(MsgRecordStatusEnum.SEND_SUCCESS.getStatus());
+        record.setStatus(MessageStatus.SEND_SUCCESS.getStatus());
         mqRecordMapper.updateById(record);
     }
 }

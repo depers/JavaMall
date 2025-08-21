@@ -43,7 +43,7 @@ public class DataSourceConfig {
     @Primary
     public DataSource dataSource() throws SQLException {
         DruidDataSource dataSource = new DruidDataSource();
-        dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/pulsar?characterEncoding=UTF-8&useSSL=false&serverTimeZone=Asia/Shanghai&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true");
+        dataSource.setUrl("jdbc:mysql://192.168.24.128:3306/pulsar?characterEncoding=UTF-8&useSSL=false&serverTimeZone=Asia/Shanghai&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true");
         dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
         dataSource.setUsername("root");
         dataSource.setPassword("fx1212");

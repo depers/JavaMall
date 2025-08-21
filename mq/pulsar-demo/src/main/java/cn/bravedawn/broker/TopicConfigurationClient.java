@@ -21,7 +21,7 @@ public class TopicConfigurationClient {
 
     public static void main(String[] args) throws PulsarClientException, PulsarAdminException {
         PulsarAdmin admin = PulsarAdmin.builder()
-                .serviceHttpUrl("http://192.168.133.128:8080")
+                .serviceHttpUrl("http://192.168.24.128:8080")
                 .build();
 
         Map<String, String> properties = admin.topics().getProperties(Constants.TOPIC_NAME);
@@ -38,7 +38,13 @@ public class TopicConfigurationClient {
 
         // 删除分区主题
         String topic = "persistent://public/siis/sms";
+        String topic2 = "persistent://public/siis/sms_priority";
+        String topic3 = "persistent://public/siis/dead_sms";
+        String topic4 = "persistent://public/siis/dead_sms_priority";
         admin.topics().deletePartitionedTopic(topic);
+        admin.topics().deletePartitionedTopic(topic2);
+//        admin.topics().delete(topic3);
+//        admin.topics().delete(topic4);
         admin.close();
 
     }

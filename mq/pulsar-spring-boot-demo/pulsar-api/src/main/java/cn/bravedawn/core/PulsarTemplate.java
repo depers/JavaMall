@@ -133,6 +133,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
         // 选择生产者
         Producer<PulsarMessage> pulsarMessageProducer = producerMap.get(pulsarMessage.getTopicPrefix());
         if (pulsarMessage.getPriorityEnum() == PriorityEnum.HIGH) {
+            log.info("发送优先级消息, msg={}", pulsarMessage);
             pulsarMessageProducer = priorityProducerMap.get(pulsarMessage.getTopicPrefix());
         }
 

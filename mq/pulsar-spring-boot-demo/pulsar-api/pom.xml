@@ -81,6 +81,24 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
+        <!--redis-->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <version>3.36.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.redisson</groupId>
+                    <artifactId>redisson-spring-data-33</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-data-26</artifactId>
+            <version>3.36.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

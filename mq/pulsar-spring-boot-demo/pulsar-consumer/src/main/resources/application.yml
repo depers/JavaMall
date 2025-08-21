@@ -3,3 +3,9 @@
 pulsar:
   client-type: consumer
 
+
+spring:
+  redis:
+    redisson:
+      file: classpath:redisson.yml
+

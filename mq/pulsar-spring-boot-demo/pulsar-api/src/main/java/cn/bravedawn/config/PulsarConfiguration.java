@@ -2,9 +2,11 @@ package cn.bravedawn.config;
 
 import cn.bravedawn.core.*;
 import cn.bravedawn.toolkit.ApplicationContextHolder;
+import cn.bravedawn.toolkit.RedissonUtils;
 import cn.bravedawn.toolkit.YamlUtil;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -55,6 +57,12 @@ public class PulsarConfiguration {
     public MessageListenerContainer messageListenerContainer(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties,
                                                              List<AbstractBlockingQueueConsumer> blockingQueueConsumerList, AbstractDeadLetterBlockingQueueConsumer deadLetterBlockingQueueConsumer) {
         return new MessageListenerContainer(pulsarClientWrapper, pulsarProperties, blockingQueueConsumerList, deadLetterBlockingQueueConsumer);
+    }
+
+    @Bean
+    @ConditionalOnBean(AbstractBlockingQueueConsumer.class)
+    public RedissonUtils redissonUtils(RedissonClient redissonClient) {
+        return new RedissonUtils(redissonClient);
     }
 
 

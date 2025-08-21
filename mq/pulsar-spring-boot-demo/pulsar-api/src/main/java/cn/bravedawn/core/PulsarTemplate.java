@@ -46,6 +46,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
     private final PulsarProperties pulsarProperties;
     private final Map<String, Producer<PulsarMessage>> producerMap = new HashMap<>();
     private final Map<String, Producer<PulsarMessage>> priorityProducerMap = new HashMap<>();
+    private final SendSuccessInterceptor sendSuccessInterceptor = new SendSuccessInterceptor();
 
     public PulsarTemplate(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties) {
         this.pulsarClientWrapper = pulsarClientWrapper;
@@ -78,7 +79,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
                     .batchingMaxBytes(512 * 1024)
                     .batchingMaxPublishDelay(50, TimeUnit.MILLISECONDS)
                     .batchingMaxMessages(500)
-                    .intercept(new SendSuccessInterceptor())
+                    .intercept(sendSuccessInterceptor)
                     .create();
             producerMap.put(topic.getTopicPrefix(), producer);
         }
@@ -97,7 +98,7 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
                     .batchingMaxBytes(512 * 1024)
                     .batchingMaxPublishDelay(50, TimeUnit.MILLISECONDS)
                     .batchingMaxMessages(500)
-                    .intercept(new SendSuccessInterceptor())
+                    .intercept(sendSuccessInterceptor)
                     .create();
             priorityProducerMap.put(priorityQueue.getTopicPrefix(), producer);
         }

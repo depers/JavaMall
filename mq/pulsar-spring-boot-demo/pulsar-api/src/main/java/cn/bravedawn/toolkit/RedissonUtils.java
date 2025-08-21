@@ -1,5 +1,6 @@
-package cn.bravedawn.util;
+package cn.bravedawn.toolkit;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,16 +18,15 @@ import java.util.concurrent.TimeUnit;
  */
 
 @Slf4j
-@Component
-public class  RedissonUtils {
+@AllArgsConstructor
+public class RedissonUtils {
 
 
     /**
      * 工具类
      */
 
-    @Autowired
-    private RedissonClient redissonClient;
+    private final RedissonClient redissonClient;
 
     /**
      * 获取值

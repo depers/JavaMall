@@ -2,6 +2,7 @@ package cn.bravedawn.core;
 
 import cn.bravedawn.config.PulsarProperties;
 import cn.bravedawn.contant.SchemaDefinitionConfig;
+import cn.bravedawn.interceptor.ConsumeIdempotentInterceptor;
 import cn.hutool.core.net.NetUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.extra.spring.SpringUtil;
@@ -42,6 +43,7 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
     private Map<String, List<Consumer<PulsarMessage>>> consumersMap;
     private AbstractDeadLetterBlockingQueueConsumer deadLetterBlockingQueueConsumer;
     private Consumer<PulsarMessage> deadLetterConsumer;
+    private final ConsumeIdempotentInterceptor consumeIdempotentInterceptor = new ConsumeIdempotentInterceptor();
 
     public MessageListenerContainer(PulsarClientWrapper pulsarClientWrapper, PulsarProperties pulsarProperties,
                                     List<AbstractBlockingQueueConsumer> blockingQueueConsumers, AbstractDeadLetterBlockingQueueConsumer deadLetterBlockingQueueConsumer) {
@@ -106,6 +108,7 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
                             // 重试主题
                             .retryLetterTopic(listenConfig.getRetryLetterTopicName())
                             .build())
+                    .intercept(consumeIdempotentInterceptor)
                     .messageListener((consume, msg) -> {
                         String msgStr = new String(msg.getData());
                         try {

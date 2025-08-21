@@ -108,11 +108,11 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
                     .filter(item -> prefixList.contains(item.getTopicPrefix()))
                     .collect(Collectors.toMap(PulsarProperties.PriorityQueue::getTopicName, PulsarProperties.PriorityQueue::getPartitionNum,
                             (oldValue, newValue) -> oldValue));
-            priorityQueue.entrySet().stream().forEach(item -> {
-                if (simplifyList.contains(item.getKey())) {
-                    existTopics.put(item.getKey(), item.getValue());
+            priorityQueue.forEach((key, value) -> {
+                if (simplifyList.contains(key)) {
+                    existTopics.put(key, value);
                 } else {
-                    noExistTopics.put(item.getKey(), item.getValue());
+                    noExistTopics.put(key, value);
                 }
             });
 

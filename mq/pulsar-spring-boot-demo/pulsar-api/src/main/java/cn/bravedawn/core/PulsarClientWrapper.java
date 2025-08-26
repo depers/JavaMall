@@ -155,15 +155,15 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
     }
 
     private void configureschemaValidationEnforced(PulsarAdmin admin, String namespace) throws PulsarAdminException {
+        admin.namespaces().setSchemaValidationEnforced(namespace, true);
         boolean schemaValidationEnforced = admin.namespaces().getSchemaValidationEnforced(namespace);
         log.info("是否强制 Broker 对所有消息进行 Schema 验证: {}", schemaValidationEnforced);
-        admin.namespaces().setSchemaValidationEnforced(namespace, true);
     }
 
     private void configureAllowAutoUpdateSchema(PulsarAdmin admin, String namespace) throws PulsarAdminException {
+        admin.namespaces().setIsAllowAutoUpdateSchema(namespace, true);
         boolean isAllowAutoUpdateSchema = admin.namespaces().getIsAllowAutoUpdateSchema(namespace);
         log.info("控制是否允许客户端自动更新 Topic 的 Schema: {}", isAllowAutoUpdateSchema);
-        admin.namespaces().setIsAllowAutoUpdateSchema(namespace, true);
     }
 
     private void configureSchemaCompatibilityStrategy(PulsarAdmin admin, String namespace) throws PulsarAdminException {

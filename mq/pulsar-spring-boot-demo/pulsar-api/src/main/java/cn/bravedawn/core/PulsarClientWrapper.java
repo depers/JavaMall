@@ -12,6 +12,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.common.policies.data.BacklogQuota;
 import org.apache.pulsar.common.policies.data.RetentionPolicies;
+import org.apache.pulsar.common.policies.data.SchemaCompatibilityStrategy;
 import org.apache.pulsar.shade.io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -66,6 +67,7 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
                     .build();
         }
 
+        // 创建topic
         createTopic();
     }
 
@@ -74,7 +76,7 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
     }
 
 
-    public void createTopic() {
+    private void createTopic() {
         PulsarProperties.PulsarConfig pulsarConfig = pulsarProperties.getPulsarConfig();
         Preconditions.checkArgument(pulsarConfig != null, "pulsar配置信息不能为空");
         Preconditions.checkArgument(!pulsarProperties.getTopics().isEmpty(), "pulsar Topic配置信息不能为空");
@@ -134,17 +136,44 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
 
             // 检测是否开启延时队列
             detectSupportDelayQueue(admin);
+            // 检查命名空间的保留策略
             getRetention(admin, pulsarConfig.getNamespace());
+            // 检查命名空间的积压配额
             getBlockLogQuotas(admin, pulsarConfig.getNamespace());
+            // 检查消息的有效时间
             getTTL(admin, pulsarConfig.getNamespace());
+            // 检查schema的兼容性策略
+            configureSchemaCompatibilityStrategy(admin, pulsarConfig.getNamespace());
+            // 检查schema是否支持自动更新
+            configureAllowAutoUpdateSchema(admin, pulsarConfig.getNamespace());
+            // 检查broker是否强对所有消息进行schema校验
+            configureschemaValidationEnforced(admin, pulsarConfig.getNamespace());
         } catch (PulsarClientException |
                  PulsarAdminException e) {
             log.error("pulsarAdmin创建出现异常", e);
         }
     }
 
+    private void configureschemaValidationEnforced(PulsarAdmin admin, String namespace) throws PulsarAdminException {
+        boolean schemaValidationEnforced = admin.namespaces().getSchemaValidationEnforced(namespace);
+        log.info("是否强制 Broker 对所有消息进行 Schema 验证: {}", schemaValidationEnforced);
+        admin.namespaces().setSchemaValidationEnforced(namespace, true);
+    }
 
-    public void detectSupportDelayQueue(PulsarAdmin admin) throws PulsarAdminException {
+    private void configureAllowAutoUpdateSchema(PulsarAdmin admin, String namespace) throws PulsarAdminException {
+        boolean isAllowAutoUpdateSchema = admin.namespaces().getIsAllowAutoUpdateSchema(namespace);
+        log.info("控制是否允许客户端自动更新 Topic 的 Schema: {}", isAllowAutoUpdateSchema);
+        admin.namespaces().setIsAllowAutoUpdateSchema(namespace, true);
+    }
+
+    private void configureSchemaCompatibilityStrategy(PulsarAdmin admin, String namespace) throws PulsarAdminException {
+        admin.namespaces().setSchemaCompatibilityStrategy(namespace, SchemaCompatibilityStrategy.FORWARD);
+        SchemaCompatibilityStrategy schemaCompatibilityStrategy = admin.namespaces().getSchemaCompatibilityStrategy(namespace);
+        log.info("该命名空间的Schema兼容性策略：{}", schemaCompatibilityStrategy);
+    }
+
+
+    private void detectSupportDelayQueue(PulsarAdmin admin) throws PulsarAdminException {
         String delayedDeliveryEnabled = admin.brokers().getRuntimeConfigurations().get("delayedDeliveryEnabled");
         String delayedDeliveryTickTimeMillis = admin.brokers().getRuntimeConfigurations().get("delayedDeliveryTickTimeMillis");
         String isDelayedDeliveryDeliverAtTimeStrict = admin.brokers().getRuntimeConfigurations().get("isDelayedDeliveryDeliverAtTimeStrict");

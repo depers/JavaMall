@@ -1,11 +1,13 @@
 package cn.bravedawn.broker;
 
+import cn.bravedawn.constant.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.common.policies.data.BacklogQuota;
 import org.apache.pulsar.common.policies.data.RetentionPolicies;
+import org.apache.pulsar.common.policies.data.SchemaCompatibilityStrategy;
 
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,19 @@ public class NamespaceConfigurationClient{
 
             Integer namespaceMessageTTL = admin.namespaces().getNamespaceMessageTTL("public/siis");
             log.info("消息的有效时间：{}", namespaceMessageTTL);
+
+
+            SchemaCompatibilityStrategy schemaCompatibilityStrategy = admin.namespaces().getSchemaCompatibilityStrategy(Constants.NAMESPACE_NAME);
+            log.info("该命名空间的Schema兼容性策略：{}", schemaCompatibilityStrategy);
+            admin.namespaces().setSchemaCompatibilityStrategy(Constants.NAMESPACE_NAME, SchemaCompatibilityStrategy.FORWARD);
+
+            boolean isAllowAutoUpdateSchema = admin.namespaces().getIsAllowAutoUpdateSchema(Constants.NAMESPACE_NAME);
+            log.info("控制是否允许客户端自动更新 Topic 的 Schema: {}", isAllowAutoUpdateSchema);
+            admin.namespaces().setIsAllowAutoUpdateSchema(Constants.NAMESPACE_NAME, true);
+
+            boolean schemaValidationEnforced = admin.namespaces().getSchemaValidationEnforced(Constants.NAMESPACE_NAME);
+            log.info("是否强制 Broker 对所有消息进行 Schema 验证: {}", schemaValidationEnforced);
+            admin.namespaces().setSchemaValidationEnforced(Constants.NAMESPACE_NAME, true);
 
 
         } catch (Throwable e) {

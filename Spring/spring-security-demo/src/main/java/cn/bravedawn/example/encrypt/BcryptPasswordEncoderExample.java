@@ -22,6 +22,5 @@ public class BcryptPasswordEncoderExample {
         // 校验密码是否匹配
         String encryptPassword = "$2a$10$PH48kceUBVvVi6mN/2hKGemjPUjBpKCENBkP7nNzL1WxcFwpv.Aay";
         System.out.println(bCryptPasswordEncoder.matches("123456", encryptPassword));
-
     }
 }

@@ -93,6 +93,18 @@ public class AESExample2 {
         return secret;
     }
 
+    /**
+     * 从随机数生成器中获取密钥
+     * @param n 密钥长度
+     * @return
+     * @throws NoSuchAlgorithmException
+     */
+    public static SecretKey generateKey(int n) throws NoSuchAlgorithmException {
+        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+        keyGenerator.init(n);
+        SecretKey key = keyGenerator.generateKey();
+        return key;
+    }
 
     public static void main(String[] args) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, InvalidKeySpecException {
         String plainText = "hello world";

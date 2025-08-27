@@ -104,11 +104,15 @@ public class AESExample3 {
 
     public static void main(String[] args) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, InvalidKeySpecException {
         String plainText = "hello world";
+        // 用户提供的弱密码
         String password = "QeMk6G1U/pRzZDux";
+        // 生成偏移
         IvParameterSpec ivParameterSpec = generateIv();
+        // 获取aes密钥
         SecretKey key = getKeyFromPassword(password, SALT, KEY_SIZE);
-
+        // 加密
         String cipherText = encryptPasswordBased(plainText, key, ivParameterSpec);
+        // 解密
         String decryptedCipherText = decryptPasswordBased(cipherText, key);
 
         System.out.println(plainText.equals(decryptedCipherText));

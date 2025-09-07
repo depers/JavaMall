@@ -34,7 +34,8 @@ import java.util.stream.Collectors;
 public class PulsarClientWrapper implements InitializingBean, DisposableBean {
 
     private final PulsarProperties pulsarProperties;
-    private PulsarClient pulsarClient;
+    private PulsarClient pulsarProducerClient;
+    private PulsarClient pulsarConsumerClient;
 
     public PulsarClientWrapper(PulsarProperties pulsarProperties) {
         this.pulsarProperties = pulsarProperties;
@@ -42,8 +43,11 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
 
     @Override
     public void destroy() throws Exception {
-        if (pulsarClient != null) {
-            pulsarClient.close();
+        if (pulsarProducerClient != null) {
+            pulsarProducerClient.close();
+        }
+        if (pulsarConsumerClient != null) {
+            pulsarConsumerClient.close();
         }
     }
 
@@ -52,7 +56,7 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
         PulsarProperties.PulsarConfig pulsarConfig = pulsarProperties.getPulsarConfig();
         if (EnvironmentUtil.isProducer()) {
             log.info("客户端按照生产者模式进行配置, ioThreads={}, listenerThreads={}", pulsarConfig.getProducer().getIoThreads(), pulsarConfig.getProducer().getListenerThreads());
-            pulsarClient = PulsarClient.builder()
+            pulsarProducerClient = PulsarClient.builder()
                     .ioThreads(pulsarConfig.getProducer().getIoThreads())
                     .listenerThreads(pulsarConfig.getProducer().getListenerThreads())
                     .serviceUrl(pulsarConfig.getServiceUrl())
@@ -60,7 +64,7 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
         }
         if (EnvironmentUtil.isConsumer()){
             log.info("客户端按照消费者模式进行配置, ioThreads={}, listenerThreads={}", pulsarConfig.getConsumer().getIoThreads(), pulsarConfig.getConsumer().getListenerThreads());
-            pulsarClient = PulsarClient.builder()
+            pulsarConsumerClient = PulsarClient.builder()
                     .ioThreads(pulsarConfig.getConsumer().getIoThreads())
                     .listenerThreads(pulsarConfig.getConsumer().getListenerThreads())
                     .serviceUrl(pulsarConfig.getServiceUrl())
@@ -71,10 +75,13 @@ public class PulsarClientWrapper implements InitializingBean, DisposableBean {
         createTopic();
     }
 
-    public PulsarClient getPulsarClient() {
-        return pulsarClient;
+    public PulsarClient getPulsarProducerClient() {
+        return pulsarProducerClient;
     }
 
+    public PulsarClient getPulsarConsumerClient() {
+        return pulsarConsumerClient;
+    }
 
     private void createTopic() {
         PulsarProperties.PulsarConfig pulsarConfig = pulsarProperties.getPulsarConfig();

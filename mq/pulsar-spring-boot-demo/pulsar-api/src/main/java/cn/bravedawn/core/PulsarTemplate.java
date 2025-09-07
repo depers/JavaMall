@@ -72,18 +72,28 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
         JSONSchema<PulsarMessage> jsonSchema = JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA);
         // 创建普通生产者
         for (PulsarProperties.TopicProperties topic : pulsarProperties.getTopics()) {
-            Producer<PulsarMessage> producer = pulsarClientWrapper.getPulsarClient()
+            Producer<PulsarMessage> producer = pulsarClientWrapper.getPulsarProducerClient()
                     .newProducer(jsonSchema)
                     .producerName(topic.getTopicPrefix() + "-producer-" + NetUtil.getLocalhostStr() + "-" + RandomUtil.randomString(4))
-                    // 访问模式
+                    // 访问模式：共享模式
                     .accessMode(ProducerAccessMode.Shared)
-                    // 路由模式
+                    // 路由模式：轮训模式
                     .messageRoutingMode(MessageRoutingMode.RoundRobinPartition)
+                    // 分区切换频率
+                    .roundRobinRouterBatchingPartitionSwitchFrequency(1)
                     .topic(topic.getTopicName())
+                    // 开启批量发送
                     .enableBatching(true)
+                    // 批次最大发送数据大小（kb）
                     .batchingMaxBytes(512 * 1024)
+                    // 发送消息批次最大等待时间
                     .batchingMaxPublishDelay(50, TimeUnit.MILLISECONDS)
+                    // 批次最大发送消息条数
                     .batchingMaxMessages(500)
+                    // 压缩算法
+                    .intercept(sendSuccessInterceptor)
+                    // 单分区ack等待队列大小
+                    .maxPendingMessages(1000)
                     .intercept(sendSuccessInterceptor)
                     .create();
             producerMap.put(topic.getTopicPrefix(), producer);
@@ -91,18 +101,28 @@ public class PulsarTemplate implements InitializingBean, DisposableBean {
 
         // 创建优先级生产者
         for (PulsarProperties.PriorityQueue priorityQueue : pulsarProperties.getPriorityQueue()) {
-            Producer<PulsarMessage> producer = pulsarClientWrapper.getPulsarClient()
+            Producer<PulsarMessage> producer = pulsarClientWrapper.getPulsarProducerClient()
                     .newProducer(jsonSchema)
                     .producerName(priorityQueue.getTopicPrefix() + "-pri-producer-" + NetUtil.getLocalhostStr() + "-" + RandomUtil.randomString(4))
-                    // 访问模式
+                    // 访问模式：共享模式
                     .accessMode(ProducerAccessMode.Shared)
-                    // 路由模式
+                    // 路由模式：轮训模式
                     .messageRoutingMode(MessageRoutingMode.RoundRobinPartition)
+                    // 分区切换频率
+                    .roundRobinRouterBatchingPartitionSwitchFrequency(1)
                     .topic(priorityQueue.getTopicName())
+                    // 开启批量发送
                     .enableBatching(true)
+                    // 批次最大发送数据大小（kb）
                     .batchingMaxBytes(512 * 1024)
+                    // 发送消息批次最大等待时间
                     .batchingMaxPublishDelay(50, TimeUnit.MILLISECONDS)
+                    // 批次最大发送消息条数
                     .batchingMaxMessages(500)
+                    // 压缩算法
+                    .intercept(sendSuccessInterceptor)
+                    // 单分区ack等待队列大小
+                    .maxPendingMessages(1000)
                     .intercept(sendSuccessInterceptor)
                     .create();
             priorityProducerMap.put(priorityQueue.getTopicPrefix(), producer);

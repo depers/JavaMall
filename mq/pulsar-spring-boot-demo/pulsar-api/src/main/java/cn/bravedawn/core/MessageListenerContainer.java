@@ -89,7 +89,7 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
             if (isPriority) {
                 topicPrefix = topicPrefix + "-priority";
             }
-            Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarClient()
+            Consumer<PulsarMessage> pulsarMessageConsumer = pulsarClientWrapper.getPulsarConsumerClient()
                     .newConsumer(JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA))
                     .topic(topicName)
                     .subscriptionType(SubscriptionType.Shared)
@@ -160,7 +160,7 @@ public class MessageListenerContainer implements InitializingBean, DisposableBea
     private void createDeadLetterConsumer() {
         try {
             // 创建死信队列逻辑
-            deadLetterConsumer = pulsarClientWrapper.getPulsarClient()
+            deadLetterConsumer = pulsarClientWrapper.getPulsarConsumerClient()
                     .newConsumer(JSONSchema.of(SchemaDefinitionConfig.DEFAULT_SCHEMA))
                     .topicsPattern(deadLetterBlockingQueueConsumer.getTopicPattern())
                     .subscriptionType(SubscriptionType.Shared)

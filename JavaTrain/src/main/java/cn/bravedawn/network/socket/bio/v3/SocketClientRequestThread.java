@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -66,7 +67,7 @@ public class SocketClientRequestThread implements Runnable {
             String message = "";
             //程序执行到这里，会一直等待服务器返回信息(注意，前提是in和out都不能close，如果close了就收不到服务器的反馈了)
             while ((realLen = clientResponse.read(contextBytes, 0, maxLen)) != -1) {
-                message += new String(contextBytes, 0, realLen);
+                message += new String(contextBytes, 0,  realLen, StandardCharsets.UTF_8);
             }
             log.info("接收到来自服务器的信息:" + message);
         } catch (Exception e) {

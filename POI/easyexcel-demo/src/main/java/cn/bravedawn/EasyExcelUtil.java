@@ -71,11 +71,11 @@ public class EasyExcelUtil {
      *
      * @param request          请求
      * @param response         响应
-     * @param resource         被下载的文件
+     * @param inputStream         被下载的文件
      * @param downloadFileName 文件名
      */
     public static void downloadFile(HttpServletRequest request, HttpServletResponse response,
-                                    ClassPathResource resource, String downloadFileName) {
+                                    InputStream inputStream, String downloadFileName) {
 
         try (BufferedOutputStream outputStream = new BufferedOutputStream(response.getOutputStream())) {
             // 将中文按照url百分号编码，url编码会将空格变为+号，这里将其替换为合法的空格表示
@@ -83,7 +83,7 @@ public class EasyExcelUtil {
             response.setContentType(request.getSession().getServletContext().getMimeType(fileName));
             response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
             response.addHeader("Access-Control-Expose-Headers", "Content-Disposition");
-            IOUtils.copy(resource.getInputStream(), outputStream);
+            IOUtils.copy(inputStream, outputStream);
             outputStream.flush();
         } catch (IOException e) {
             log.error("导出数据出现异常", e);

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.common.policies.data.BrokerInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,27 @@ public class BrokerConfigurationClient {
         String brokerSubscriptionPatternEvaluationEnabled = admin.brokers().getRuntimeConfigurations().get("brokerSubscriptionPatternEvaluationEnabled");
         log.info("brokerSubscriptionPatternEvaluationEnabled: {}", brokerSubscriptionPatternEvaluationEnabled);
 
+
+        System.out.println("----------------------------------");
+        getBrokers(admin);
+
         admin.close();
+    }
+
+
+    public static void getBrokers(PulsarAdmin admin) throws PulsarAdminException {
+        // 2. 获取集群名称列表（如果你的部署有多个集群）
+        List<String> clusters = admin.clusters().getClusters();
+        System.out.println("Clusters: " + clusters);
+
+        // 假设我们获取第一个集群的 Broker（通常单集群部署只有一个）
+        String targetCluster = clusters.get(0); // 例如 "standalone" 或 "prod-cluster"
+
+        // 3. 获取指定集群下所有活跃 Broker 的列表
+        List<String> brokers = admin.brokers().getActiveBrokers(targetCluster);
+
+        // 4. 遍历并打印 Broker 信息
+        System.out.println("Active Brokers in cluster '" + targetCluster + "':");
+        System.out.println("Broker: " + brokers);
     }
 }

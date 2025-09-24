@@ -1,4 +1,4 @@
-package cn.bravedawn;
+package cn.bravedawn.v1;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;

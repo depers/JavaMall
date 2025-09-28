@@ -57,5 +57,9 @@ public class JsonObjectExample {
         JSONArray list = root.getJSONArray("list");
         List<Item> items = list.toList(Item.class);
         items.forEach(System.out::println);
+
+        // 根据路径获取json值
+        String skill = root.getByPath("data.skills[0]", String.class);
+        System.out.println(skill);
     }
 }

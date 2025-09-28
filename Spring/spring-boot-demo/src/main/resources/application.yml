@@ -1,0 +1,13 @@
+
+
+server:
+  port: 8082
+
+
+test:
+  encrypt-filter:
+    enable: true
+    filter-url: /filter/**
+    third-party-public-key: 0435eea5f8c02b655ddc2615c939d9c6a86f3c73fd0cc7ad4b736fd7e2e9307cd8521250ecc3cbcfb5bd222ff371e976349178f1ede6ee80c75d378230cabbebe4
+    bank-public-key: 047987ce1806424975e6af5ad4d23400700f772aafe1637ddbe24f6cc1666a4abb2cc73faa75dfe02fab3cea329a627b1de943a6450995528ff76986596968ba23
+    bank-private-key: 6c2ed06f8c5ecf2c499cf657b7ea9bae00b43d89a45ab417c12a55416470bb66

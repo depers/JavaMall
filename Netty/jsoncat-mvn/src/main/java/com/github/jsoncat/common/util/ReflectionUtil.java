@@ -1,5 +1,6 @@
 package com.github.jsoncat.common.util;
 
+import com.github.jsoncat.core.aop.intercept.Interceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
 import org.reflections.scanners.TypeAnnotationsScanner;
@@ -107,5 +108,12 @@ public class ReflectionUtil {
             method.invoke(targetObject, args);
         } catch (IllegalAccessException | InvocationTargetException ignored) {
         }
+    }
+
+
+    public static void main(String[] args) {
+        String[] packages = {"com.github.demo"};
+        Set<Class<? extends Interceptor>> subClass = getSubClass(packages, Interceptor.class);
+        System.out.println(subClass);
     }
 }

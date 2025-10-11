@@ -44,14 +44,17 @@ public final class BeanFactory {
     }
 
     public static <T> T getBean(Class<T> type) {
+        // 获取当前类型的接口实现类或者是父类
         String[] beanNames = getBeanNamesForType(type);
         if (beanNames.length == 0) {
             throw new DoGetBeanException("not fount bean implement，the bean :" + type.getName());
         }
         Object beanInstance = BEANS.get(beanNames[0]);
+        // beanInstance是否能强转为type类型
         if (!type.isInstance(beanInstance)) {
             throw new DoGetBeanException("not fount bean implement，the bean :" + type.getName());
         }
+        // 强转为type类型
         return type.cast(beanInstance);
     }
 
@@ -68,22 +71,34 @@ public final class BeanFactory {
         return result;
     }
 
+
+    /**
+     * 获取ioc容器中查找type
+     *   如果type是个接口，查找他的子类的bean名称数组
+     *   如果type是个类，查找他的父类的bean名称数组
+     * @param type
+     * @return
+     */
     private static String[] getBeanNamesForType(Class<?> type) {
         String beanName = type.getName();
         String[] beanNames = SINGLE_BEAN_NAMES_TYPE_MAP.get(beanName);
         if (beanNames == null) {
             List<String> beanNamesList = new ArrayList<>();
+            // 遍历ioc容器
             for (Map.Entry<String, Object> beanEntry : BEANS.entrySet()) {
                 Class<?> beanClass = beanEntry.getValue().getClass();
+                // 如果是接口的话
                 if (type.isInterface()) {
                     Class<?>[] interfaces = beanClass.getInterfaces();
                     for (Class<?> c : interfaces) {
+                        // 遍历容器中实例的名称与类型的名称是否一致
                         if (type.getName().equals(c.getName())) {
                             beanNamesList.add(beanEntry.getKey());
                             break;
                         }
                     }
                 } else if (beanClass.isAssignableFrom(type)) {
+                    // 判断beanClass是否是type的父类
                     beanNamesList.add(beanEntry.getKey());
                 }
             }

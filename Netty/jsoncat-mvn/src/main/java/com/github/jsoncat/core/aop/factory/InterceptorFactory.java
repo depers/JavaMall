@@ -37,6 +37,7 @@ public class InterceptorFactory {
                 throw new CannotInitializeConstructorException("not init constructor , the interceptor name :" + interceptorClass.getSimpleName());
             }
         });
+        // 实例化切面类，这里将切面也作为拦截器的一种
         aspects.forEach(aClass -> {
             Object obj = ReflectionUtil.newInstance(aClass);
             Interceptor interceptor = new InternallyAspectInterceptor(obj);

@@ -19,5 +19,6 @@ public class UUIDExample {
         String uid = UUID.randomUUID().toString();
         System.out.println(uid);
         System.out.println(uid.replaceAll("-", "").length());
+        System.out.println(uid.replaceAll("-", ""));
     }
 }

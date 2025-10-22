@@ -111,6 +111,7 @@ public class AutowiredBeanInitialization {
             beanFieldInstance = SINGLETON_OBJECTS.get(beanFieldName);
         } else {
             SINGLETON_OBJECTS.put(beanFieldName, beanFieldInstance);
+            // 这里又调了一次beanInstance的初始化方法
             initialize(beanInstance);
         }
         return beanFieldInstance;

@@ -19,7 +19,7 @@ public class Generator {
 
 
     public static void main(String[] args) {
-        String url = "jdbc:mysql://127.0.0.1:3306/pulsar?characterEncoding=UTF-8&useSSL=false&serverTimeZone=Asia/Shanghai&rewriteBatchedStatements=true";
+        String url = "jdbc:mysql://192.168.24.128:3306/sharding-jdbc?characterEncoding=UTF-8&useSSL=false&serverTimeZone=Asia/Shanghai&rewriteBatchedStatements=true";
         String username = "root";
         String password = "fx1212";
         FastAutoGenerator.create(url, username, password)
@@ -52,8 +52,9 @@ public class Generator {
                                 .pathInfo(Collections.singletonMap(OutputFile.xml, Paths.get(System.getProperty("user.dir")) + "/src/main/resources/mapper")) // 设置mapperXml生成路径
                 )
                 .strategyConfig(builder ->
-                        builder.addInclude("t_mq_record") // 设置需要生成的表名
+                        builder.addInclude("t_sms_2019") // 设置需要生成的表名
                                 .addTablePrefix("t_", "c_") // 设置过滤表前缀
+                                .addTableSuffix("_2019")
                                 .entityBuilder()
                                 .enableTableFieldAnnotation()
                                 .enableLombok()

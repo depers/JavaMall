@@ -1,5 +1,7 @@
 package cn.bravedawn.obj.object.equalsandhashcode.equals;
 
+import java.util.Objects;
+
 /**
  * PC: SPDB
  * author: fengx9
@@ -26,20 +28,33 @@ public class WrongVoucher extends Money{
         this.store = store;
     }
 
+//    @Override
+//    public boolean equals(Object o) {
+//        if (o == this)
+//            return true;
+//        if (!(o instanceof WrongVoucher))
+//            return false;
+//        WrongVoucher other = (WrongVoucher)o;
+//        boolean currencyCodeEquals = (this.currencyCode == null && other.currencyCode == null)
+//                || (this.currencyCode != null && this.currencyCode.equals(other.currencyCode));
+//        boolean storeEquals = (this.store == null && other.store == null)
+//                || (this.store != null && this.store.equals(other.store));
+//        return this.amount == other.amount && currencyCodeEquals && storeEquals;
+//    }
+
+
     @Override
     public boolean equals(Object o) {
-        if (o == this)
-            return true;
-        if (!(o instanceof WrongVoucher))
-            return false;
-        WrongVoucher other = (WrongVoucher)o;
-        boolean currencyCodeEquals = (this.currencyCode == null && other.currencyCode == null)
-                || (this.currencyCode != null && this.currencyCode.equals(other.currencyCode));
-        boolean storeEquals = (this.store == null && other.store == null)
-                || (this.store != null && this.store.equals(other.store));
-        return this.amount == other.amount && currencyCodeEquals && storeEquals;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        WrongVoucher that = (WrongVoucher) o;
+        return Objects.equals(store, that.store);
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(store);
+    }
 
     public static void main(String[] args) {
         Money cash = new Money(42, "USD");

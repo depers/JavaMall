@@ -1,0 +1,26 @@
+dataSources:
+  ds_0:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://192.168.24.128:3306/sharding-jdbc?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: fx1212
+
+rules:
+  - !SHARDING
+    tables:
+      t_sms:
+        actualDataNodes: ds_0.t_sms_${2019..2025}
+        tableStrategy:
+          standard:
+            shardingColumn: send_time
+            shardingAlgorithmName: sms_table_hash_mod
+    shardingAlgorithms:
+      sms_table_hash_mod:
+        type: CLASS_BASED
+        props:
+          strategy: standard
+          algorithmClassName: cn.bravedawn.sharding.CustomSmsTableHashModShardingAlgorithm
+
+props:
+  sql-show: true

@@ -1,0 +1,19 @@
+server:
+  port: 9001
+
+spring:
+  application:
+    name: sharding-jdbc-table-service
+  datasource:
+    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
+    url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
+
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+
+logging:
+  level:
+    org.apache.shardingsphere: DEBUG  # 打印 Sharding-JDBC 内部日志

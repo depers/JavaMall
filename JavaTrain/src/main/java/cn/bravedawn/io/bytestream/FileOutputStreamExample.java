@@ -1,7 +1,9 @@
 package cn.bravedawn.io.bytestream;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @Author : fengx9
@@ -18,9 +20,11 @@ public class FileOutputStreamExample {
 
     public static void main(String[] args) {
 
-        writeByte();
+//        writeByte();
+//
+//        writeString();
 
-        writeString();
+        writeStringV2();
     }
 
     private static void writeByte() {
@@ -41,6 +45,23 @@ public class FileOutputStreamExample {
             String s = "Welcome to javaTpoint.";
             byte b[] = s.getBytes();//converting string into byte array
             fout.write(b);
+            fout.close();
+            System.out.println("success...");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    private static void writeStringV2() {
+        try {
+            FileOutputStream fout = new FileOutputStream("E:\\testout.txt");
+            String s = "Welcome to javaTpoint.";
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
+            byte[] buffer = new byte[1];
+            int readBytes = -1;
+            while ((readBytes = inputStream.read(buffer)) != -1) {
+                fout.write(buffer, 0, readBytes);
+            }
             fout.close();
             System.out.println("success...");
         } catch (Exception e) {

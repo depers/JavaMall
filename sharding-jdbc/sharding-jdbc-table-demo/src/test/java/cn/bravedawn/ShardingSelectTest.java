@@ -4,6 +4,7 @@ import cn.bravedawn.entity.Sms;
 import cn.bravedawn.mapper.SmsMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,5 +47,19 @@ public class ShardingSelectTest {
         LambdaQueryWrapper<Sms> smsLambdaQueryWrapper = Wrappers.lambdaQuery(Sms.class).between(Sms::getSendTime, "2020-12-12 00:00:00", "2021:12:31 00:00:00");
         List<Sms> smsList = smsMapper.selectList(smsLambdaQueryWrapper);
         log.info("查询结果是：{}", smsList);
+    }
+
+    @Test
+    public void testSelectPage() {
+        Page<Sms> page = new Page<>(1, 10);
+        Page<Sms> smsPage = smsMapper.selectPage(page, Wrappers.emptyWrapper());
+        log.info("查询结果是：{}, size={}", smsPage.getRecords(), smsPage.getSize());
+    }
+
+
+    @Test
+    public void testSelectCount() {
+        Long count = smsMapper.selectCount(Wrappers.emptyWrapper());
+        log.info("查询结果是：count={}", count);
     }
 }

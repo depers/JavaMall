@@ -13,6 +13,13 @@ import java.util.List;
 import java.util.concurrent.*;
 
 public class EfficientFileSplitProcessor {
+
+    /**
+     * 多线程解析和读取文件
+     * 基于文件位置拆分的更高效方案
+     */
+
+
     private final int totalThreads;
     private final ExecutorService executor;
 

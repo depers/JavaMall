@@ -13,7 +13,7 @@ public class SystemExample {
      Windows	CRLF	"\r\n"	    回车+换行
      Unix/Linux	LF	    "\n"	    换行
      经典Mac	    CR	    "\r"	    回车
-     现代macOS	LF	    "\n"	    同Unix
+     现代macOS	LF	    "\n"	    ｿ同Unix
      */
 
     public static void main(String[] args) {

@@ -97,7 +97,7 @@ public class JedisUtil {
                         "    return redis.call('del', KEYS[1]) " +
                         "else " +
                         "    return 0 " +
-                        "end";
+                        "end ";
 
         try (Jedis jedis = getJedis()) {
             Object result = jedis.eval(luaScript, Collections.singletonList(key),

@@ -1,4 +1,4 @@
-package cn.bravedawn.io.file;
+package cn.bravedawn.io.file.randomaccessfile;
 
 import cn.bravedawn.io.utils.ResourceHelper;
 

@@ -15,19 +15,16 @@ public class Test {
         RedisConfig redisConfig = new RedisConfig();
         JedisPool jedisPool = redisConfig.createJedisPool();
 
-        DistributedLockManager distributedLockManager = new DistributedLockManager(jedisPool);
-        distributedLockManager.executeWithLock("lock", () -> {
+        try(RedisDistributedLock redisDistributedLock = new RedisDistributedLock(jedisPool, "lock")) {
             try {
-                while (true) {
+                boolean b = redisDistributedLock.tryLock(0);
+                while (b) {
                     log.info("处理逻辑中。。。。");
                     Thread.sleep(1000);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().isInterrupted();
             }
-            return 1;
-        });
-
-        distributedLockManager.close();
+        }
     }
 }

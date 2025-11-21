@@ -17,12 +17,11 @@ import java.util.concurrent.*;
  */
 
 
-
 /**
- * 带有看门狗功能的分布式锁
+ * 带有完善资源管理的分布式锁
  */
 @Slf4j
-public class RedisDistributedLock {
+public class RedisDistributedLock implements AutoCloseable {
 
     private final JedisPool jedisPool;
     private final String lockKey;
@@ -31,6 +30,7 @@ public class RedisDistributedLock {
     private final long watchDogInterval; // 看门狗检查间隔，单位：毫秒
 
     private volatile boolean isLocked = false;
+    private volatile boolean isClosed = false;
     private ScheduledExecutorService watchDogExecutor;
     private ScheduledFuture<?> watchDogFuture;
 
@@ -46,7 +46,7 @@ public class RedisDistributedLock {
     public RedisDistributedLock(JedisPool jedisPool, String lockKey, long expireTime, long watchDogInterval) {
         this.jedisPool = jedisPool;
         this.lockKey = lockKey;
-        this.lockValue = UUID.randomUUID().toString();
+        this.lockValue = UUID.randomUUID().toString() + ":" + Thread.currentThread().getId();
         this.expireTime = expireTime;
         this.watchDogInterval = watchDogInterval;
         this.watchDogExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -56,26 +56,31 @@ public class RedisDistributedLock {
         });
     }
 
-    /**
-     * 尝试获取锁
-     * @param timeout 获取锁的超时时间，单位：毫秒
-     * @return 是否获取成功
-     */
     public boolean tryLock(long timeout) {
+        if (isClosed) {
+            log.error("Lock has been closed");
+            return false;
+        }
+
         long endTime = System.currentTimeMillis() + timeout;
 
         try (Jedis jedis = jedisPool.getResource()) {
             SetParams params = SetParams.setParams().nx().px(expireTime);
+            String result = jedis.set(lockKey, lockValue, params);
+            if ("OK".equals(result)) {
+                isLocked = true;
+                startWatchDog();
+                return true;
+            }
 
             while (System.currentTimeMillis() < endTime) {
-                String result = jedis.set(lockKey, lockValue, params);
+                result = jedis.set(lockKey, lockValue, params);
                 if ("OK".equals(result)) {
                     isLocked = true;
                     startWatchDog();
                     return true;
                 }
 
-                // 短暂休眠后重试
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -90,25 +95,21 @@ public class RedisDistributedLock {
         return false;
     }
 
-    /**
-     * 获取锁（使用默认超时时间）
-     */
     public boolean tryLock() {
         return tryLock(DEFAULT_ACQUIRE_TIMEOUT);
     }
 
     /**
-     * 释放锁
+     * 释放锁并清理资源
      */
     public void unlock() {
-        if (!isLocked) {
+        if (!isLocked || isClosed) {
             return;
         }
 
         stopWatchDog();
 
         try (Jedis jedis = jedisPool.getResource()) {
-            // 使用Lua脚本保证原子性：只有锁的value匹配时才删除
             String luaScript =
                     "if redis.call('get', KEYS[1]) == ARGV[1] then " +
                             "   return redis.call('del', KEYS[1]) " +
@@ -116,25 +117,41 @@ public class RedisDistributedLock {
                             "   return 0 " +
                             "end";
 
-            jedis.eval(luaScript, Collections.singletonList(lockKey),
+            Long result = (Long) jedis.eval(luaScript,
+                    Collections.singletonList(lockKey),
                     Collections.singletonList(lockValue));
+
+            if (result == 1) {
+                log.info("Successfully released lock: " + lockKey);
+            } else {
+                log.info("Lock was already released or expired: " + lockKey);
+            }
         } catch (Exception e) {
-            log.error("Failed to release lock: " + lockKey, e);
+            System.err.println("Error releasing lock: " + lockKey + ", " + e.getMessage());
         } finally {
             isLocked = false;
         }
     }
 
     /**
-     * 启动看门狗，定期续期
+     * 实现AutoCloseable接口，支持try-with-resources
      */
+    @Override
+    public void close() {
+        if (!isClosed) {
+            unlock();
+            shutdownWatchDogExecutor();
+            isClosed = true;
+        }
+    }
+
     private void startWatchDog() {
         if (watchDogFuture != null && !watchDogFuture.isCancelled()) {
             watchDogFuture.cancel(true);
         }
 
         watchDogFuture = watchDogExecutor.scheduleAtFixedRate(() -> {
-            if (isLocked) {
+            if (isLocked && !isClosed) {
                 try (Jedis jedis = jedisPool.getResource()) {
                     String luaScript =
                             "if redis.call('get', KEYS[1]) == ARGV[1] then " +
@@ -154,16 +171,13 @@ public class RedisDistributedLock {
                         isLocked = false;
                     }
                 } catch (Exception e) {
-                    log.error("WatchDog error for lock: " + lockKey + ", " + e.getMessage());
+                    log.error("WatchDog error: " + e.getMessage());
                     isLocked = false;
                 }
             }
         }, watchDogInterval, watchDogInterval, TimeUnit.MILLISECONDS);
     }
 
-    /**
-     * 停止看门狗
-     */
     private void stopWatchDog() {
         if (watchDogFuture != null) {
             watchDogFuture.cancel(true);
@@ -171,23 +185,17 @@ public class RedisDistributedLock {
         }
     }
 
-    /**
-     * 关闭资源
-     */
-    public void close() {
-        if (isLocked) {
-            unlock();
-        }
+    private void shutdownWatchDogExecutor() {
         if (watchDogExecutor != null && !watchDogExecutor.isShutdown()) {
             watchDogExecutor.shutdown();
+            try {
+                if (!watchDogExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    watchDogExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                watchDogExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
-    }
-
-    public boolean isLocked() {
-        return isLocked;
-    }
-
-    public String getLockKey() {
-        return lockKey;
     }
 }

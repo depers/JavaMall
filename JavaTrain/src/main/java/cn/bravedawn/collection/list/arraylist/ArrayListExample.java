@@ -37,7 +37,7 @@ public class ArrayListExample {
         list4.add(1l);
         list4.add(2l);
         list4.add(1, 3l);
-        System.out.println(Arrays.asList(1L, 3L, 2L).equals(list4)); // true
+        System.out.println("指定下标添加元素：" + Arrays.asList(1L, 3L, 2L).equals(list4)); // true
 
         // 一次插入一个Collection或一些元素
         List<Long> list5 = new ArrayList<>(Arrays.asList(1l, 2l, 3l));

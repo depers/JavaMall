@@ -15,6 +15,8 @@ import java.io.InputStream;
  * @Author : depers
  * @Project : spring-boot-demo
  * @Date : Created in 2025-08-07 15:28
+ *
+ * 把只能读一次的 HTTP 响应体缓存起来，让响应体可以被多次读取。
  */
 class BufferingClientHttpResponseWrapper implements ClientHttpResponse {
     private final ClientHttpResponse response;

@@ -61,6 +61,16 @@ public class HashMapExample {
         System.out.println(productsByName.containsValue(roadBike)); // false
 
 
+        // 创建一个 HashMap
+        Map<String, Integer> map = new HashMap<>();
+        map.put("a", 1);
+        map.put("b", 2);
+        map.put("c", 3);
 
+        // 使用 replaceAll() 方法修改所有的值
+        map.replaceAll((key, value) -> value + 10);
+
+        // 打印修改后的 map
+        System.out.println(map); // 输出：{a=11, b=12, c=13}
     }
 }

@@ -11,4 +11,4 @@ JAXB（Java Architecture for XML Binding）是 Java 的一个标准技术，它�
 
   * Jackson XML：更现代的XML处理库
   * XStream：简单的XML序列化库
-  * ｿDOM/SAX：传统的XML解析方式
+  * DOM/SAX：传统的XML解析方式

@@ -12,6 +12,8 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Author : depers
@@ -24,7 +26,7 @@ public class XmlUtil {
     /**
      * 对象转字符串
      * @param obj
-     * @param classes
+     * @param classes 如果解析对象包含泛型，这里就要把泛型的class也要写出来
      * @return
      */
     public static String objToXMl(Object obj, Class<?>... classes) {
@@ -83,5 +85,31 @@ public class XmlUtil {
             log.info("获取xml中指定标签的内容异常", e);
         }
         return null;
+    }
+
+    public static void main(String[] args) {
+        User user = new User();
+        user.setName("depers");
+        user.setAge(18);
+        user.setPassword("1212");
+
+        BookList bookList = new BookList();
+
+        Book book = new Book();
+        book.setName("Java权威指南");
+        book.setPrice("39.9");
+        Book book2 = new Book();
+        book2.setName("Java权威指南2");
+        book2.setPrice("59.9");
+
+        List<Book> books = new ArrayList<>();
+        books.add(book);
+        books.add(book2);
+        bookList.setBookList(books);
+
+        user.setBookList(bookList);
+
+        String s = objToXMl(user, User.class);
+        System.out.println(s);
     }
 }

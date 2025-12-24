@@ -9,6 +9,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.awt.print.Book;
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,4 +27,7 @@ public class User {
 
     @XmlTransient                       // 忽略此字段，不参与XML转换
     private String password;
+
+    @XmlElement(name = "BookList")
+    private BookList bookList;
 }

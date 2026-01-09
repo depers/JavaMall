@@ -1,10 +1,7 @@
 package cn.bravedawn.namespace;
 
-import cn.bravedawn.JaxbXmlUtil;
 import cn.bravedawn.XmlUtil;
-import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Marshaller;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,25 +31,7 @@ public class Test {
 
         String xml = XmlUtil.objToXMl(user, User.class, Goods.class);
         System.out.println(xml);
-
-        /**
-         * <s:SvcBody xmlns:s="http://example.com/schema">
-         *     <s:id>1</s:id>
-         *     <s:name>Tom</s:name>
-         *     <s:items>
-         *         <s:item>
-         *             <s:id>2</s:id>
-         *             <s:price>11</s:price>
-         *             <s:name>banana</s:name>
-         *         </s:item>
-         *         <s:item>
-         *             <s:id>1</s:id>
-         *             <s:price>12</s:price>
-         *             <s:name>apple</s:name>
-         *         </s:item>
-         *     </s:items>
-         * </s:SvcBody>
-         */
-
+        String xml2 = xml.substring(102);
+        System.out.println(xml2);
     }
 }

@@ -33,7 +33,7 @@ public class XmlUtil {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(classes);
             Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, false);
             // 将对象转为xml
             StringWriter sw = new StringWriter();
             marshaller.marshal(obj, sw);

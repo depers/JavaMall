@@ -7,7 +7,7 @@ package cn.bravedawn.obj.proxy.cglib;
 import net.sf.cglib.proxy.Enhancer;
 
 public class CglibProxyTest {
-    
+
 
     public static void main(String[] args) {
         Enhancer enhancer = new Enhancer();

@@ -10,7 +10,7 @@ import java.util.List;
  * @Date : Created in 2026-01-09 11:15
  */
 @Data
-@XmlRootElement(name = "user", namespace = "http://example.com/schema")
+@XmlRootElement(name = "SvcBody", namespace = "http://example.com/schema")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class User {
 

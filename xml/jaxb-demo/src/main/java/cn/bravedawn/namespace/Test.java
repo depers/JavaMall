@@ -33,5 +33,13 @@ public class Test {
         System.out.println(xml);
         String xml2 = xml.substring(102);
         System.out.println(xml2);
+
+        //-======================================
+        Result result = new Result<Goods>();
+        result.setCode(1);
+        result.setMsg("hello");
+        result.setData(goods1);
+        String xml3 = XmlUtil.objToXMl(result, Result.class, Goods.class);
+        System.out.println(xml3);
     }
 }

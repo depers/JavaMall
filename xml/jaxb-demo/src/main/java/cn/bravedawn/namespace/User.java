@@ -20,7 +20,7 @@ public class User {
     @XmlElement(name = "name", namespace = "http://example.com/schema")
     private String name;
 
-    @XmlElementWrapper(name = "items")
+//    @XmlElementWrapper(name = "items")
     @XmlElement(name = "item")
     private List<Goods> goodsList;
 

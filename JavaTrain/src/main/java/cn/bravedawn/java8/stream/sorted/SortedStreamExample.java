@@ -33,6 +33,8 @@ public class SortedStreamExample {
                 return o1.compareTo(o2);
             }
         };
+
+        list.sort(Comparator.comparing(Student::getBirthday));
         System.out.println(list);
     }
 

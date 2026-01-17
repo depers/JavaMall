@@ -41,5 +41,8 @@ public class Test {
         result.setData(goods1);
         String xml3 = XmlUtil.objToXMl(result, Result.class, Goods.class);
         System.out.println(xml3);
+
+        System.out.println("------------------");
+        Object xmlToObj = XmlUtil.xmlToObj(xml, User.class, Goods.class);
     }
 }

@@ -31,10 +31,10 @@ public class JsonTypeInfoExample {
 
         JsonMapper mapper = JsonMapper.builder().build();
         String json = mapper.writeValueAsString(people);
-        System.out.println(json);
+        System.out.println("对象转换为Json：" + json);
 
 
         People p = mapper.readValue(json, People.class);
-        System.out.println(p); // 对象p的properties中的PhysicalCondition类被转为了LinkHashMap
+        System.out.println("Json转换为对象：" + p); // 对象p的properties中的PhysicalCondition类被转为了LinkHashMap
     }
 }

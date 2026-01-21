@@ -33,8 +33,36 @@ public class JsonTypeInfoExample {
 
 
         JsonMapper mapper = JsonMapper.builder().build();
-        mapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance,
-                ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
+        /**
+         *  在 JSON 中写入 Java 对象的“类型信息”，以便反序列化时能还原真实类型（多态），否则 Jackson 不知道该反序列化成哪个子类。
+         *  效果是：
+         *  {
+         *   "@class": "com.example.User",
+         *   "id": 1,
+         *   "name": "张三"
+         *  }
+          */
+
+        mapper.activateDefaultTyping(
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY);
+
+        /**
+         * 在 JSON 中写入 Java 对象的“类型信息”，以便反序列化时能还原真实类型（多态），否则 Jackson 不知道该反序列化成哪个子类。
+         * 效果是：
+         * [
+         *   "com.example.User",
+         *   {
+         *     "id": 1,
+         *     "name": "张三"
+         *   }
+         * ]
+         */
+//        mapper.activateDefaultTyping(
+//                LaissezFaireSubTypeValidator.instance,
+//                ObjectMapper.DefaultTyping.NON_FINAL
+//        );
         String json = mapper.writeValueAsString(people);
         System.out.println(json);
 

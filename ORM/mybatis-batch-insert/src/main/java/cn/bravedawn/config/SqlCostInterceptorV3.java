@@ -4,6 +4,7 @@ package cn.bravedawn.config;
  * @Author : depers
  * @Date : Created in 2026-01-21 17:25
  */
+import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -12,6 +13,7 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
 @Intercepts({
+        // 普通查询（MyBatis）
         @Signature(
                 type = Executor.class,
                 method = "query",
@@ -22,6 +24,20 @@ import org.apache.ibatis.session.RowBounds;
                         ResultHandler.class
                 }
         ),
+        // MyBatis-Plus / QueryWrapper / 分页 常用
+        @Signature(
+                type = Executor.class,
+                method = "query",
+                args = {
+                        MappedStatement.class,
+                        Object.class,
+                        RowBounds.class,
+                        ResultHandler.class,
+                        CacheKey.class,
+                        BoundSql.class
+                }
+        ),
+        // INSERT / UPDATE / DELETE
         @Signature(
                 type = Executor.class,
                 method = "update",

@@ -1,5 +1,6 @@
 package cn.bravedawn.config;
 
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
@@ -24,14 +25,7 @@ public class DatasourceConfig {
 
     @Bean
     public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
-
         return createMPSqlSessionFactory(dataSource);
-
-        // org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
-        // configuration.setMapUnderscoreToCamelCase(true);
-        // configuration.addInterceptor(new SqlCostInterceptor());
-        // sqlSessionFactoryBean.setConfiguration(configuration);
-        // return sqlSessionFactoryBean.getObject();
     }
 
 
@@ -42,6 +36,10 @@ public class DatasourceConfig {
         MybatisSqlSessionFactoryBean mybatisSqlSessionFactoryBean = new MybatisSqlSessionFactoryBean();
         mybatisSqlSessionFactoryBean.setDataSource(dataSource);
         mybatisSqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mapper/*.xml"));
+
+        MybatisConfiguration configuration = new MybatisConfiguration();
+        configuration.addInterceptor(new SqlCostInterceptorV2());
+        mybatisSqlSessionFactoryBean.setConfiguration(configuration);
         return mybatisSqlSessionFactoryBean.getObject();
     }
 
@@ -53,6 +51,11 @@ public class DatasourceConfig {
         SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
         sqlSessionFactoryBean.setDataSource(dataSource);
         sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mapper/*.xml"));
+
+        org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
+        configuration.setMapUnderscoreToCamelCase(true);
+        configuration.addInterceptor(new SqlCostInterceptor());
+        sqlSessionFactoryBean.setConfiguration(configuration);
         return sqlSessionFactoryBean.getObject();
     }
 

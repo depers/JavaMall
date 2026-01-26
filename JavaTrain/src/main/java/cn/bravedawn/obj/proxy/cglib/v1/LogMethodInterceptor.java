@@ -1,4 +1,4 @@
-package cn.bravedawn.obj.proxy.cglib;
+package cn.bravedawn.obj.proxy.cglib.v1;
 
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;

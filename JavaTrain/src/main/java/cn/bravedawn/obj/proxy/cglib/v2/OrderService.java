@@ -1,4 +1,4 @@
-package cn.bravedawn.obj.proxy.cglib;
+package cn.bravedawn.obj.proxy.cglib.v2;
 
 /**
  * @Author : depers

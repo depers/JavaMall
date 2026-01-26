@@ -17,7 +17,7 @@
 
 package cn.bravedawn.chain;
 
-import org.opengoofy.index12306.framework.starter.bases.ApplicationContextHolder;
+import cn.bravedawn.util.ApplicationContextHolder;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.Ordered;
 import org.springframework.util.CollectionUtils;

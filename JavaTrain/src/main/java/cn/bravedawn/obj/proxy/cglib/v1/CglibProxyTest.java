@@ -1,4 +1,4 @@
-package cn.bravedawn.obj.proxy.cglib;
+package cn.bravedawn.obj.proxy.cglib.v1;
 
 /**
  * @Author : depers
@@ -7,6 +7,10 @@ package cn.bravedawn.obj.proxy.cglib;
 import net.sf.cglib.proxy.Enhancer;
 
 public class CglibProxyTest {
+
+    /**
+     * 在jdk17中运行需要添加jvm参数：--add-opens java.base/java.lang=ALL-UNNAMED
+     */
 
 
     public static void main(String[] args) {

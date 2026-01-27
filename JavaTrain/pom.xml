@@ -187,12 +187,20 @@
             <version>0.4</version>
         </dependency>
 
-
+        <!--cglib代理-->
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib</artifactId>
             <version>3.3.0</version>
         </dependency>
+
+        <!-- bytebuddy代理-->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.14.12</version>
+        </dependency>
+
 
     </dependencies>
     <build>
